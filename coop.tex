@@ -1,0 +1,34 @@
+\section{Cooperative Scheduling Implementation Schemes}
+
+-sequence diagram of what happens in an actor during synchronous and asynchronous method calls.
+
+\subsection{Modeling Language Concepts in the JVM}
+\paragraph{An Actor has a lock and Every Asynchronous call is a Thread}
+The trivial straightforward approach for implementing cooperative scheduling in Java is to model each actor as an object with a Thread Pool with a queue and a single execution thread. Each asynchronous call would then generate a new thread with it own stack and context and put in the pool's queue. Whenever a control switch statement occurs the thread would be suspended by the JVM's normal behaviour. When the release condition is enabled the thread would compete with the thread pool and other suspended threads for a lock in order to execute on the actor. \\
+We have one lock per Actor for ensuring single thread execution.
+
+\paragraph{Every Actor is a Thread Pool}
+-free queue, less space
+-Each async. call is modeled as task.
+
+\paragraph{Every System has a Thread Pool}
+-each actor is modeled as a task with a queue of lambda expressions.
+-particular uses of an executor service.
+
+\paragraph{Synchronous calls context}
+-to save execution context we save the current call stack as a Thread and optimally suspend it
+
+\paragraph{Continuations as tasks}
+- fully asynchronous environment\\
+- modeling continuations as labeled functions and converting them to lambda expressions.\\
+- allocating more memory in the heap and saving memory on the stack.\\
+
+\subsection{Optimizations for the JVM}
+
+\paragraph{Demand-driven Approach}
+
+\paragraph{Optimal Usage of System Threads}
+
+\paragraph{Eliminating Busy Waiting}
+
+\paragraph{Using JVM Garbage Collection}
