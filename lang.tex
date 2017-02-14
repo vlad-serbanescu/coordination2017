@@ -13,9 +13,97 @@ The "await" statement of ABS offers a high level mechanism that controls executi
 - the main concepts: async calls, await on boolean and futures, each object has its own queue.
 - example for coroutines (Paul Klint paper at SEN)
 
-\subsection{Proof of Concept: Actor-based implementation of Agent-based Modelling}
+\subsection{Proof of concept}
 \label{ag}
+
+Agent-based modeling has been shown to be a powerful means to express organizational abstractions, including auctioning systems \cite{agent_auction, bas16}.
+However, it is still a major challenge to provide an efficient implementation of these high-level agent-based modeling concepts, e.g., the deliberation cycle which integrates a goal-oriented computation with an event-based communication approach. 
+To lower the barrier for adoption by industry, Dastani and Testerink \cite{bas16} propose a Java methodology which guides the development of agent-based models. 
+This includes a corresponding library of object-oriented design patterns for modeling agent-based concepts, called OO2APL. 
+
+A major part of the complexity in OO2APL stems from the implementation of a middleware for management of the deliberation cycle of and the event-based communication between agents. 
+Furthermore, this middleware is tightly coupled with the high-level design patterns for agents.
+In contrast, below we show that modeling agents directly by actors  allows to abstract in a concise manner from the underlying implementation of the deliberation cycle  and the event-based communication mechanism.
+
+a generic agent model
+
+generic mechanism for querying the belief base by pattern matching 
+
+no need for explicit registry of agents, so get for free garbage collection
+
+we have a natural match between ABS methods and plan execution of agents, which the cooperative scheduling provides additional flexibility tin the implementation of the deliberation cycle.
+
+
+\begin{verbatim}
+data Goal = Goal;
+data Belief = Belief;
+data Message = Message;
+
+interface Agent {
+	Unit message(Message m);
+}
+
+class A1(Set<Belief> init_beliefs, Set<Goal> init_goals)  implements Agent {
+	Set<Belief> beliefs = init_beliefs;
+	Set<Goal> goals = init_goals;
+	
+	Unit message(Message m) {
+		case m { 
+			Message =>  { }
+			_ => { }
+		}
+	}
+	
+	Unit goal_rule(Goal g) {
+		case g {
+			Goal => { }
+			_ => { }
+		}
+	}
+	
+	Unit run() {
+		 while(this.goals != EmptySet) {
+		  for (g in this.goals) {
+		      this.goal_rule(g);
+		  }
+		  suspend;
+		}
+	}
+
+}
+
+// example of a Main configuration
+{
+    Agent a1 = new A1(set[], set[Goal]);
+}
+\end{verbatim}
+
+
+\begin{verbatim}
+data Message = 
+Announce(Agent announceCaller, Route toSell, Price price) | 
+Bid(Agent bidCaller, Route toBuy, Price bid) |
+Sold(Agent soldCaller, Route soldItem) |
+Result(Set<Agent> winners, List<Price> prices, List<Agent> unhappy);
+
+class BiddingAgent(Belief init_value, Goal init_goal, Rat risk) implements Agent {
+	Belief belief = init_value;
+	Set<Goal> goals = set[init_goal];
+	
+	Unit message(Message m) {
+		case m {
+			Announce(caller, slot, price) =>  { ...   } 
+		    Sold(caller, slot) => { ... }
+		}
+	}
+}
+\end{verbatim}
+
+
+
 -expressive generic agent model \\
 -software engineering context \\
 - support for functional data types, FLI, type-checking\\
 -sequence of events that maximize agent throughput\\
+
+
