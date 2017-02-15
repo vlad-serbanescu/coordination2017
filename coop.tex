@@ -4,12 +4,10 @@
 
 \subsection{Modeling Language Concepts in the JVM}
 \paragraph{An Actor has a lock and Every Asynchronous call is a Thread}
-The trivial straightforward approach for implementing cooperative scheduling in Java is to model each actor as an object with a lock for which execution threads compete. Each asynchronous call would then generate a new thread with it own stack and context. Whenever a control switch statement occurs the thread would be suspended by the JVM's normal behaviour and the available threads would then compete for the actor's lock. When the release condition is enabled the suspended thread would become available and in turn compete with the other available threads in order to execute on the actor. \\
-We have one lock per Actor for ensuring single thread execution.
+The trivial straightforward approach for implementing cooperative scheduling in Java is to model each actor as an object with a lock for which execution threads compete. Each asynchronous call would then generate a new thread with it own stack and context. Whenever a control switch statement occurs the thread would be suspended by the JVM's normal behavior and the available threads would then compete for the actor's lock. When the release condition is enabled the suspended thread would become available and in turn compete with the other available threads in order to execute on the actor. The main drawback of this approach is the large number of threads that are created, which restricts any application from having more method calls than the main memory can support live threads.
 
 \paragraph{Every Actor is a Thread Pool}
--free queue, less space
--Each async. call is modeled as task.
+To reduce the number of live threads in an application such that it can run independent of the number of asynchronous calls, we can use Java 8 new features and model each invocation as a task and organize each actor as a Thread Pool. This gives the actor an implicit queue to which tasks are submitted. Once they are started the threads still have to compete for the actor's lock in order to execute. Therefore the number of live threads can be restricted to the number of threads allowed by each Thread Pool. However when cooperative scheduling occurs, the executing Thread will be suspended and therefore still live in the system so the application's live threads will be equal to the number of "await" statements in the program. The application will then be limited by the number of maximum number of suspended threads that can exist in the main memory.  
 
 \paragraph{Every System has a Thread Pool}
 -each actor is modeled as a task with a queue of lambda expressions.
