@@ -23,18 +23,11 @@ This includes a corresponding library of object-oriented design patterns for mod
 
 A major part of the complexity in OO2APL stems from the implementation of a middleware for management of the deliberation cycle of and the event-based communication between agents. 
 Furthermore, this middleware is tightly coupled with the high-level design patterns for agents.
-In contrast, below we show that modeling agents directly by actors  allows to abstract in a concise manner from the underlying implementation of the deliberation cycle  and the event-based communication mechanism.
-
-a generic agent model
-
-generic mechanism for querying the belief base by pattern matching 
-
-no need for explicit registry of agents, so get for free garbage collection
-
-we have a natural match between ABS methods and plan execution of agents, which the cooperative scheduling provides additional flexibility tin the implementation of the deliberation cycle.
+In contrast,  Listing \ref{list:Agent} shows that modeling agents directly by actors  allows to abstract in a concise manner from the underlying implementation of the deliberation cycle  and the event-based communication mechanism.
 
 
-\begin{verbatim}
+
+\begin{lstlisting}[caption= Generic Agent Model, label=list:Agent]
 data Goal = Goal;
 data Belief = Belief;
 data Message = Message;
@@ -72,14 +65,17 @@ class A1(Set<Belief> init_beliefs, Set<Goal> init_goals)  implements Agent {
 
 }
 
-// example of a Main configuration
-{
-    Agent a1 = new A1(set[], set[Goal]);
-}
-\end{verbatim}
+\end{lstlisting}
+
+%// example of a Main configuration
+%{
+%    Agent a1 = new A1(set[], set[Goal]);
+%}
 
 
-\begin{verbatim}
+Listing \ref{list:agent} shows a concrete instantiation of an agent  in an auctioning system.
+
+\begin{lstlisting}[caption= Agent Model, label=list:agent]
 data Message = 
 Announce(Agent announceCaller, Route toSell, Price price) | 
 Bid(Agent bidCaller, Route toBuy, Price bid) |
@@ -97,8 +93,16 @@ class BiddingAgent(Belief init_value, Goal init_goal, Rat risk) implements Agent
 		}
 	}
 }
-\end{verbatim}
+\end{lstlisting}
 
+
+a generic agent model
+
+generic mechanism for querying the belief base by pattern matching 
+
+no need for explicit registry of agents, so get for free garbage collection
+
+we have a natural match between ABS methods and plan execution of agents, which the cooperative scheduling provides additional flexibility tin the implementation of the deliberation cycle.
 
 
 -expressive generic agent model \\
