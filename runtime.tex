@@ -1,4 +1,10 @@
 \section{Runtime Behaviour}
 \label{run}
+The implementation of our Cooperative Scheduling is done through a Java library which contains a set of classes and interfaces that have a direct mapping to the ABS language concepts described in Section \ref{lang}. The library provides an implementation of the actor's cooperative scheduling behavior, the suspension and release mechanism and the fully asynchrnous environment while respecting the logic of synchronous calls. The library provides the solution and the optimizations discussed in Section\ref{scheme} using the preprocessed continuations generated as detailed in Section \ref{comp}. The library can be obtained as a maven project and is available online\cite{library}
 
-- the new Java backend
+\subsection{Suspension and Release Points}
+
+
+\subsection{Actor Implementation}
+The library currently supports only actors running on the same machine by providing a class called \textbf{LocalActor}. 
+
