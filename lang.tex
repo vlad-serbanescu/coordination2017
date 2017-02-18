@@ -17,13 +17,13 @@ The "await" statement of ABS offers a high level mechanism that controls executi
 \label{ag}
 
 Agent-based modeling has been shown to be a powerful means to express organizational abstractions, including auctioning systems \cite{agent_auction,bas16}.
-However, it is still a major challenge to provide an efficient implementation of these high-level agent-based modeling concepts, e.g., the deliberation cycle which integrates a goal-oriented computation with an event-based communication approach. 
+However, it is still a major challenge to provide an efficient implementation of the high-level agent-based modeling concepts, e.g., the deliberation cycle which integrates a goal-oriented computation with an event-based communication approach. 
 To lower the barrier for adoption by industry, Dastani and Testerink \cite{bas16} propose a Java methodology which guides the development of agent-based models. 
 This includes a corresponding library of object-oriented design patterns for modeling agent-based concepts, called OO2APL. 
 
-A major part of the complexity in OO2APL stems from the implementation of a middleware for management of the deliberation cycle of and the event-based communication between agents. 
+OO2APL is still somewhat complex, a major part of which stems from  implementation of a middleware for management of the deliberation cycle and the event-based communication between agents. 
 Furthermore, this middleware is tightly coupled with the high-level design patterns for agents.
-In contrast,  Listing \ref{list:Agent} shows that modeling agents directly by actors  allows to abstract in a concise manner from the underlying implementation of the deliberation cycle  and the event-based communication mechanism.
+In contrast,  Listing \ref{list:Agent} shows that modeling agents directly by actors  allows us to abstract in a concise manner from the underlying implementation of the deliberation cycle  and the event-based communication mechanism.
 
 
 
