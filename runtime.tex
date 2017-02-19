@@ -1,10 +1,81 @@
 \section{Runtime Behaviour}
 \label{run}
-The implementation of our Cooperative Scheduling is done through a Java library which contains a set of classes and interfaces that have a direct mapping to the ABS language concepts described in Section \ref{lang}. The library provides an implementation of the actor's cooperative scheduling behavior, the suspension and release mechanism and the fully asynchrnous environment while respecting the logic of synchronous calls. The library provides the solution and the optimizations discussed in Section\ref{scheme} using the preprocessed continuations generated as detailed in Section \ref{comp}. The library can be obtained as a maven project and is available online\cite{library}
+The implementation of our Cooperative Scheduling is done through a Java library which contains a set of classes and interfaces that have a direct mapping to the ABS language concepts described in Section \ref{lang}. The library provides an implementation of the actor's cooperative scheduling behavior, the suspension and release mechanism and the fully asynchronous environment while respecting the logic of synchronous calls. The library provides the solution and the optimizations discussed in Section\ref{scheme} using the preprocessed continuations generated as detailed in Section \ref{comp}. The library can be obtained as a maven project and is available online\cite{library}
 
 \subsection{Suspension and Release Points}
-
+To implement cooperative scheduling our library provides abstractions for guards that control suspension and release points. The are supported through the abstract class \textbf{Guard} and its subclasses \textbf{FutureGuard}, \textbf{PureExpressionGuard} and \textbf{ConjunctionGuard} that describe the conditions on which an actor's message can await: either a future, a particular valid expression or a group of these conditions respectively. 
 
 \subsection{Actor Implementation}
-The library currently supports only actors running on the same machine by providing a class called \textbf{LocalActor}. 
+The library offers an interface \textbf{Actor} containing several methods for implementing the behavior of synchronous and asynchronous method calls and await statements from ABS. The library currently supports an implementation of this interface called \textbf{LocalActor} for actors running on the same machine. Inside this class the is a \textit{messageQueue} defined which holds all the invocations (synchronous or asynchronous) that have been submitted to the actor as tasks. The implementation defines an inner class \textit{MainTask} which is a \textit{Java Runnable} that corresponds to the task responsible for taking messages one by one from the queue and running them. There is a problem when the queue is empty. Since we do not want to make this task busy-wait until a message arrives, an idea would be to check upon insertion of a new message into the queue whether such a task exists already. This, however, requires some careful synchronization. so, for every actor, we keep a local atomic boolean flag \textit{mainTaskIsRunning}. A first approach looks like this:
+
+\begin{lstlisting}[caption= Basic Synchronization for the Demand-Driven Approach]
+	// inside the task
+	class MainTask implements Runnable{
+		public void run() ({
+				// iterate through queue and take one message and run it
+			mainTaskIsRunning.set(false);
+		}
+	}
+	// when inserting a new message
+	messageQueue.add(m);
+	if (!mainTaskIsRunning.compareAndSet(false, true)) {
+		DeploymentComponent.submit(new MainTask())
+	}...
+\end{lstlisting}
+
+The problem with the above code is that the check of the queue for emptiness and setting the flag to "false" is not atomic, and in between these two statements, a new message may be inserted into the queue without spawning a new task. To remedy this, we need to introduce a new method that can check the queue for emptiness and set the flag to "false" in a critical section, for example inside a "synchronized" block using the \textit{messageQueue} or \textit{mainTaskIsRunning} as the lock. Additionally, either the insertion into the \textit{messageQueue} or \textit{compareAndSet} of \textit{mainTaskIsRunning} should also use the same lock obviously.
+
+\begin{lstlisting}[caption= Complete Synchronization for the Demand-Driven Approach]
+
+private boolean takeOrDie() {
+	synchronized (mainTaskIsRunning) {
+		// iterate through queue and take one ready message 
+		// if it exists set the next message for the main task and then
+		return true;
+		//if the queue if empty or no message is able to run
+		mainTaskIsRunning.set(false);
+		return false;
+	}
+}
+
+private boolean notRunningThenStart() {
+	synchronized (mainTaskIsRunning) {
+		return mainTaskIsRunning.compareAndSet(false, true);
+	}
+}
+
+// inside the task
+class MainTask implements Runnable{
+	public void run() {
+		while (takeOrDie())
+			// proceed to take the next message message and run it	 
+	}
+}
+
+// when inserting a new message
+messageQueue.add(m);
+if (notRunningThenStart()) {
+	DeploymentComponent.submit(new MainTask());
+}
+\end{lstlisting}
+
+Another problem with the approach above is that (when there are more actors than available threads), some actors may keep processing one message after the other from its queue, and thus keeping the thread it is running on, while some other actors are starving, i.e., not being assigned to any thread. To remedy this, we could change the while loop to an if statement like this:
+
+\begin{lstlisting}[caption= Fairness Between Actors]
+
+// inside the task
+class MainTask implements Runnable{
+	public void run() {
+		if (!takeOrDie())
+			return;
+		// proceed to take the next message message and run it	 
+		DeploymentComponent.submit(this);
+	}
+}
+\end{lstlisting}
+
+
+
+\subsection{Deployment Component Class}
+This class manges the two elements that that the solution requires at the level of the system. The first is the thread pool which currently in the the library is a \textit{newFixedThreadPool} singleton ExecutorService initialized with a fixed number of threads equal to the number of cores in the system. Inside the class there is support to safely shutdown the ExecutorService when all the actors in the application have completed execution. The second element is the notification mechanism together with a \textit{ConcurrentHashMap} that contains mappings of futures that hold release points on actors in the system. Actors that complete a certain future can call the static method \textit{releaseAll()} to notify actors that contain messages suspended on that particular future.
 
