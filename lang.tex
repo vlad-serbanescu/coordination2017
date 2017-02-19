@@ -21,7 +21,7 @@ However, it is still a major challenge to provide an efficient implementation of
 To lower the barrier for adoption by industry, Dastani and Testerink \cite{bas16} propose a Java methodology which guides the development of agent-based models. 
 This includes a corresponding library of object-oriented design patterns for modeling agent-based concepts, called OO2APL. 
 
-OO2APL is still somewhat complex, a major part of which stems from  implementation of a middleware for management of the deliberation cycle and the event-based communication between agents. 
+OO2APL is still somewhat complex, a major reason for which is the need to implement a middleware for management of the deliberation cycle and the event-based communication between agents. 
 Furthermore, this middleware is tightly coupled with the high-level design patterns for agents.
 In contrast,  Listing \ref{list:Agent} shows that modeling agents directly by actors  allows us to abstract in a concise manner from the underlying implementation of the deliberation cycle  and the event-based communication mechanism.
 
@@ -56,9 +56,9 @@ class A1(Set<Belief> init_beliefs, Set<Goal> init_goals)  implements Agent {
 	
 	Unit run() {
 		 while(this.goals != EmptySet) {
-		  for (g in this.goals) {
-		      this.goal_rule(g);
-		  }
+  		    for (g in this.goals) {
+		        this.goal_rule(g);
+		    }
 		  suspend;
 		}
 	}
@@ -73,7 +73,22 @@ class A1(Set<Belief> init_beliefs, Set<Goal> init_goals)  implements Agent {
 %}
 
 
-Listing \ref{list:agent} shows a concrete instantiation of an agent  in an auctioning system.
+In ABS, one can define the goals, beliefs and messages as abstract data types.
+This makes it easy to define the plans in handling incoming messages and the rules in processing the goals by means of pattern matching against these model-specific data types.
+Listing \ref{list:Agent} shows a high-level design pattern in ABS capturing the code structure for modeling agents with a clear separation of message plans and goal rules. 
+The provided \lstinline|run()| method ensures proactive processing of the goal rules. 
+The unconditional \lstinline|suspend| statement lets the message plans to be executed in between. 
+The \lstinline|Agent| interface provides only one method that is needed to enable sending message by the agents. 
+
+Thanks to the flexibility of ABS, one can easily adopt variations of the above design pattern.
+For example, placing the \lstinline|suspend| statement inside the \lstinline|for| loop will allow interleaving individual goal rules with message plans.
+Furthermore, application-specific scheduling policies \cite{rabs,cog}  may be applied if desired, for example, to give some goals or messages higher priorities.
+
+
+
+Listing \ref{list:agent} shows a concrete model of an agent  in an auctioning system.
+Here, we define four types of message sent and received by auctioning and bidding agents. 
+
 
 \begin{lstlisting}[caption= Agent Model, label=list:agent]
 data Message = 
