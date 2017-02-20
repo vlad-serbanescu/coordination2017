@@ -31,16 +31,16 @@ completion of 10000 trigonometric functions before completing.
 	\label{bench:jj}
 	\centering
 	\includegraphics[scale=0.8]{jaj8}
-	\caption{Perfomance figures of the two Java implementations for Cooperative Scheduling}
+	\caption{Performance figures of the two Java implementations for Cooperative Scheduling}
 \end{figure}
 
-\par These results do show that our solution mitigates the limitation of heavy native Java threads. However, while our solution is catered towards a widely-used language, it doesn't mean that there aren't other languages that are more suited to implement ABS language concepts efficiently and without these limitations. In Section \ref{coop} we listed several optimizations that were inferred from out implementation solution. What we want to do is compare this solution to an ABS backend implemented in Erlang that uses the same Thread-based approach but does not suffer from any limitation of native threads. We want to observe if our data-oriented approach can be comparable to Erlang's lightweight threads. The result in Figure \ref{bench:ej} show that our approach fares much better once the number of messages passes 1024. This result also strenghtens ABS purpose to provide a programming language for real applications.
+\par These results do show that our solution mitigates the limitation of heavy native Java threads. However, while our solution is catered towards a widely-used language, it doesn't mean that there aren't other languages that are more suited to implement ABS language concepts efficiently and without these limitations. In Section \ref{coop} we listed several optimizations that were inferred from out implementation solution. What we want to do is compare this solution to an ABS backend implemented in Erlang that uses the same Thread-based approach but does not suffer from any limitation of native threads. We want to observe if our data-oriented approach can be comparable to Erlang's lightweight threads. The result in Figure \ref{bench:ej} show that our approach fares much better once the number of messages passes 1024. This result also strengthens ABS purpose to provide a programming language for real applications.
 
 \begin{figure}
 	\label{bench:ej}
 	\centering
 	\includegraphics[scale=0.8]{erlj8}
-	\caption{Perfomance figures of the Erlang and Java backends for Cooperative Scheduling}
+	\caption{Performance figures of the Erlang and Java backends for Cooperative Scheduling}
 \end{figure}
 
 
