@@ -1,0 +1,148 @@
+
+%%%%%%%%%%%%%%%%%%%%%%% file typeinst.tex %%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This is the LaTeX source for the instructions to authors using
+% the LaTeX document class 'llncs.cls' for contributions to
+% the Lecture Notes in Computer Sciences series.
+% http://www.springer.com/lncs       Springer Heidelberg 2006/05/04
+%
+% It may be used as a template for your own input - copy it
+% to a new file with a new name and use it as the basis
+% for your article.
+%
+% NB: the document class 'llncs' has its own and detailed documentation, see
+% ftp://ftp.springer.de/data/pubftp/pub/tex/latex/llncs/latex2e/llncsdoc.pdf
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\documentclass[runningheads,a4paper]{llncs}
+
+\usepackage{amssymb}
+\setcounter{tocdepth}{3}
+\usepackage{graphicx}
+\usepackage{listings,calc}
+
+\lstset{language=Java, numbers=left, columns=fullflexible, keepspaces=true, basicstyle=\scriptsize}
+
+\usepackage{url}
+
+\urldef{\mailsa}\path|{vlad.serbanescu, frank.s.de.boer, jaghouri}@cwi.nl|  
+  
+\newcommand{\keywords}[1]{\par\addvspace\baselineskip
+\noindent\keywordname\enspace\ignorespaces#1}
+
+\begin{document}
+
+\mainmatter  % start of an individual contribution
+
+% first the title is needed
+\title{A Java Run-Time System for Cooperative Scheduling in ABS}
+
+% a short form should be given in case it is too long for the running head
+\titlerunning{Cooperative Scheduling}
+
+% the name(s) of the author(s) follow(s) next
+%
+% NB: Chinese authors should write their first names(s) in front of
+% their surnames. This ensures that the names appear correctly in
+% the running heads and the author index.
+%
+\author{Vlad Serbanescu
+\and Frank de Boer \and Mahdi Jaghouri}
+%
+\authorrunning{Serbanescu et al.}
+% (feature abused for this document to repeat the title also on left hand pages)
+
+% the affiliations are given next; don't give your e-mail address
+% unless you accept that it will be published
+\institute{Leiden Institute of Advanced Computer Science\\
+Centrum Wiskunde and Informatica\\
+\mailsa\\
+\url{http://www.cwi.nl}}
+
+%
+% NB: a more complex sample for affiliations and the mapping to the
+% corresponding authors can be found in the file "llncs.dem"
+% (search for the string "\mainmatter" where a contribution starts).
+% "llncs.dem" accompanies the document class "llncs.cls".
+%
+
+\toctitle{Lecture Notes in Computer Science}
+\tocauthor{Authors' Instructions}
+\maketitle
+
+
+\begin{abstract}
+%Modeling applications at the design phase of any project is highly important in order to build a reliable, fast and robust system. Understanding the control flow of execution from just the model is crucial for the applications next software engineering phases such as implementation, testing, release and maintenance.  If we add that a large portion software systems are running several jobs in parallel, with a good model we can observe data consistency and detect deadlocks efficiently. One of the toughest models to execute, especially in a parallel or distributed environment is the Actor-based model which introduces the notion of cooperative scheduling, a high-level synchronization mechanism which allows an actor to continue to execute messages from its queue when the current message execution is suspended . In this paper we will investigate some of the challenges of translating the cooperative scheduling behavior into the Java Runtime Environment. We will analyze the Abstract Behavioral Specification (ABS) Language concepts which are very well suited for Agent-based applications modeling and provide a benchmark for testing several solutions of efficiently running cooperative scheduling behavior. 
+Actor-based models of computation in general assume a run-to-completion mode
+of execution of the messages.
+The Abstract Behavioral Specification (ABS) Language extends the Actor-based model
+with  a high-level synchronization mechanism which allows actors to suspend the
+execution of the curren message and schedule in a cooperative manner another
+queued message.  This  extension  is a powerful means for the expression and analysis
+of fine-grained run-time dependencies between messages.
+
+In this paper we introduce  and evaluate a new run-time system in Java for  the use of ABS as a full-fledged programming language.
+The main challenge is the development of an efficient and scalable  thread-based implementation of cooperative scheduling.
+By means of a typical benchmark we evaluate our proposed solution and compare it
+to several other thread-based implementations of cooperative scheduling.
+
+
+
+
+
+
+
+\keywords{Cooperative Scheduling, Mult-Agent Systems, High-Performace Computing, Language Design}
+\end{abstract}
+
+
+\input{intro.tex}
+\input{lang.tex}
+\input{coop.tex}
+\input{compile.tex}
+\input{runtime.tex}
+\input{benchmark.tex}
+\input{conclusion.tex}
+
+
+
+
+
+\begin{thebibliography}{4}
+
+\bibitem{rabs}Joakim Bjork, Frank S. de Boer, Einar Broch Johnsen, Rudolf Schlatte, Silvia Lizeth Tapia Tarifa:
+User-defined schedulers for real-time concurrent objects. ISSE 9(1): 29-43 (2013)
+
+\bibitem{cgf}De Boer, Frank S., Dave Clarke, and Einar Broch Johnsen. "A complete guide to the future." European Symposium on Programming. Springer Berlin Heidelberg, 2007.
+
+\bibitem{paj8} Nobakht, Behrooz, and Frank S. de Boer. "Programming with actors in Java 8." International Symposium On Leveraging Applications of Formal Methods, Verification and Validation. Springer Berlin Heidelberg, 2014.
+
+\bibitem{bas16} Mehdi Dastani, Bas Testerink:
+Design patterns for multi-agent programming. IJAOSE 5(2/3): 167-202 (2016)
+
+\bibitem{abs} Johnsen, E. B., Hähnle, R., Schäfer, J., Schlatte, R., and Steffen, M. (2010, November). ABS: A core language for abstract behavioral specification. In International Symposium on Formal Methods for Components and Objects (pp. 142-164). Springer Berlin Heidelberg.
+
+\bibitem{cog} Nobakht, B., de Boer, F. S., Jaghoori, M. M., and Schlatte, R. (2012, March). Programming and deployment of active objects with application-level scheduling. In Proceedings of the 27th Annual ACM Symposium on Applied Computing (pp. 1883-1888). ACM.
+
+\bibitem{saco} Albert, E., Arenas, P., Flores-Montoya, A., Genaim, S., Gómez-Zamalloa, M., Martin-Martin, E., and Román-Díez, G. (2014, April). SACO: static analyzer for concurrent objects. In International Conference on Tools and Algorithms for the Construction and Analysis of Systems (pp. 562-567). Springer Berlin Heidelberg.
+
+\bibitem{dead}Flores-Montoya, A. E., Albert, E., and Genaim, S. (2013). May-happen-in-parallel based deadlock analysis for concurrent objects. In Formal Techniques for Distributed Systems (pp. 273-288). Springer Berlin Heidelberg.
+
+\bibitem{dis}Şerbănescu, V., Azadbakht, K., and de Boer, F. (2016). A java-based distributed approach for generating large-scale social network graphs. In Resource Management for Big Data Platforms (pp. 401-417). Springer International Publishing.
+
+\bibitem{cloud} Bezirgiannis, N., and de Boer, F. (2016, January). ABS: a high-level modeling language for cloud-aware programming. In International Conference on Current Trends in Theory and Practice of Informatics (pp. 433-444). Springer Berlin Heidelberg.
+
+\bibitem{agent_auction}Franco Zambonelli, Nicholas R. Jennings, Michael Wooldridge. 
+Organisational Abstractions for the Analysis and Design of Multi-agent Systems
+Agent-Oriented Software Engineering. Volume 1957 of the series Lecture Notes in Computer Science pp 235-251
+
+\bibitem{execserv} https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html
+
+\bibitem{library}https://github.com/vlad-serbanescu/abs-api-cwi.git
+\end{thebibliography}
+
+
+
+\end{document}
