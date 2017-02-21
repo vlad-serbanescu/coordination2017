@@ -10,6 +10,13 @@ execution of the current message and schedule in a cooperative manner another
 queued message.  This  extension  is a powerful means for the expression and analysis
 of fine-grained run-time dependencies between messages.
 
+%Mahdi: 
+{\bfseries
+Maybe something about ABS being a modeling language? 
+Or call it a programming/modeling paradigm rather than a ``language".
+Then it makes more sense to say we make it a full-fledged programming language via FLI and integration with Java.
+}
+
 In this paper we introduce  and evaluate a new run-time system in Java for  the use of ABS as a full-fledged programming language which supports a Foreign Language Interface (FLI) for the import of Java librarries. The main challenge is the development of an efficient and scalable  thread-based implementation of cooperative scheduling
 which supports a translation of ABS models into Java source code.
 The basic feature of our proposed solution is the implementation of messages by means of
