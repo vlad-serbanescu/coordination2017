@@ -74,7 +74,25 @@ Centrum Wiskunde and Informatica\\
 
 
 \begin{abstract}
-Modeling applications at the design phase of any project is highly important in order to build a reliable, fast and robust system. Understanding the control flow of execution from just the model is crucial for the applications next software engineering phases such as implementation, testing, release and maintenance.  If we add that a large portion software systems are running several jobs in parallel, with a good model we can observe data consistency and detect deadlocks efficiently. One of the toughest models to execute, especially in a parallel or distributed environment is the Actor-based model which introduces the notion of cooperative scheduling, a high-level synchronization mechanism which allows an actor to continue to execute messages from its queue when the current message execution is suspended . In this paper we will investigate some of the challenges of translating the cooperative scheduling behavior into the Java Runtime Environment. We will analyze the Abstract Behavioral Specification (ABS) Language concepts which are very well suited for Agent-based applications modeling and provide a benchmark for testing several solutions of efficiently running cooperative scheduling behavior. 
+%Modeling applications at the design phase of any project is highly important in order to build a reliable, fast and robust system. Understanding the control flow of execution from just the model is crucial for the applications next software engineering phases such as implementation, testing, release and maintenance.  If we add that a large portion software systems are running several jobs in parallel, with a good model we can observe data consistency and detect deadlocks efficiently. One of the toughest models to execute, especially in a parallel or distributed environment is the Actor-based model which introduces the notion of cooperative scheduling, a high-level synchronization mechanism which allows an actor to continue to execute messages from its queue when the current message execution is suspended . In this paper we will investigate some of the challenges of translating the cooperative scheduling behavior into the Java Runtime Environment. We will analyze the Abstract Behavioral Specification (ABS) Language concepts which are very well suited for Agent-based applications modeling and provide a benchmark for testing several solutions of efficiently running cooperative scheduling behavior. 
+Actor-based models of computation in general assume a run-to-completion mode
+of execution of the messages.
+The Abstract Behavioral Specification (ABS) Language extends the Actor-based model
+with  a high-level synchronization mechanism which allows actors to suspend the
+execution of the curren message and schedule in a cooperative manner another
+queued message.  This  extension  is a powerful means for the expression and analysis
+of fine-grained run-time dependencies between messages.
+
+In this paper we introduce  and evaluate a new run-time system in Java for  the use of ABS as a full-fledged programming language.
+The main challenge is the development of an efficient and scalable  thread-based implementation of cooperative scheduling.
+By means of a typical benchmark we evaluate our proposed solution and compare it
+to several other thread-based implementations of cooperative scheduling.
+
+
+
+
+
+
 
 \keywords{Cooperative Scheduling, Mult-Agent Systems, High-Performace Computing, Language Design}
 \end{abstract}
