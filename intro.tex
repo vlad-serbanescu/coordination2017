@@ -2,7 +2,11 @@
 
 The Actor-based model of computation \cite{Agha} is particularly tailored to the description of distributed systems.  Actors represent processes that execute in parallel and interact via the asynchronous communication of messages.
 Messages in general are queued and processed in a run-to-completion mode of execution.
-The  Abstract Behavioral Specification (ABS) \cite{abs}  Language  integrates the Actor-based model of distributed and parallel computation with object-orientation:
+
+The  Abstract Behavioral Specification (ABS) \cite{abs}  Language has been developed
+for modeling and analysis of distributed systems, e.g., recent developments
+have focussed on the modeling and analysis of Cloud applications \cite{Albert}.
+ ABS integrates the Actor-based model of distributed and parallel computation with object-orientation:
 in ABS a message specifies a  call to one of the methods provided by the callee,
 as such it supports the ``programming to interfaces'' paradigm (as, for example, in the Axtor-based modeling language Rebeca \cite{Sirjani}).
 ABS further  extends the Actor-based model with  a high-level synchronization mechanism which allows actors to suspend the
@@ -11,11 +15,11 @@ queued message.  This  extension  is a powerful means for the expression and ana
 of fine-grained run-time dependencies between messages.
 
 %Mahdi: 
-{\bfseries
-Maybe something about ABS being a modeling language? 
-Or call it a programming/modeling paradigm rather than a ``language".
-Then it makes more sense to say we make it a full-fledged programming language via FLI and integration with Java.
-}
+%{\bfseries
+%Maybe something about ABS being a modeling language? 
+%Or call it a programming/modeling paradigm rather than a ``language".
+%Then it makes more sense to say we make it a full-fledged programming language via FLI and integration with Java.
+%}
 
 In this paper we introduce  and evaluate a new run-time system in Java for  the use of ABS as a full-fledged programming language which supports a Foreign Language Interface (FLI) for the import of Java librarries. The main challenge is the development of an efficient and scalable  thread-based implementation of cooperative scheduling
 which supports a translation of ABS models into Java source code.
@@ -31,13 +35,22 @@ to several other thread -based implementations in Java of cooperative scheduling
 
 \paragraph{Related Work}
 
-Our main motivation is to provide an implementation of the ABS language  as a full-fledged Actor-based programming language which supports,
-as mentioned above,  the ``programming to interfaces'' paradigm.
+Our main motivation is  the  implementation of the ABS language  as a full-fledged Actor-based programming language which fully supports   the ``programming to interfaces'' paradigm.
+In contrast,  Java libraries for programming actors like Akka  \cite{Akka} mainly  provide  pure asynchronous  message passing which does not  support the use of application programming interfaces (API) and corresponding object-oriented techniques for code reuse.
+Furthermore,  distinguising features of the ABS comprise the high-level constructs for cooperative scheduling which allow the application of formal methods, e.g.,
+fornal analysis of deadlock \cite{deadlock}.
+On the other hand,  the Actor model in Scala \cite{Scala} does provide a limited suspension mechanism but its use is \emph{not} recommended because of its intricate semantics and degrade performance.
 
 There exist various implementation schemes for cooperative scheduling in ABS.
 In the process-oriented approach sending a message  is implemented by the generation of a  corresponding process. This basic approach is followed in the Java backend of ABS \cite{abs,Schafer} and in the Erlang backend \cite{Erlang}.
+In section \ref{bench} we compare these backends with our solution.
+
+
 In contrast, in the Haskell backend \cite{Haskell}  the use of continuations allows
-to queue  a message and dequeue it for execution.
+to queue  a message and dequeue it for execution and the C implementation of the
+Encore language \cite{Encore}  uses low-level (e.g., machine code) operations for
+storing and retrieving call stacks from memory.
+
 
 
 
