@@ -153,11 +153,11 @@ class BiddingAgent(Item goal, Rat risk, Rat budget) implements Agent {
 }
 \end{lstlisting}
 
-
-At this stage, we explain how the \lstinline|await| statement in sending the \lstinline|Bid| message can be useful.
-If we take one step back, when the auctioneer agent sends out its \lstinline|Announce| messages, it can easily await their completion to make sure it has received all bids.
-But in order to select the winner, it is not enough to {\em receive} the bids; additionally, the bids need to be processed.
-In fact, the \lstinline|await| statement on sending a \lstinline|Bid| message makes sure that the current bid has been accounted for by the auctioneer before the current method in the bidding agent completes. 
-To achieve a similar effect without cooperative scheduling (via the \lstinline|await| statement), one would typically need to count the number of responses to make sure all bid have arrived, which additionally means that uninterested agents still need to respond to the \lstinline|Announce| messages. 
-In our ABS implementation, not only we do not need to count the responses, but also uninterested agents (when \lstinline|offer| is not the same as the agents \lstinline|goal|) could simply skip sending a bid. 
-
+One challenge in modeling the auctioneer agent is how to make sure all bids from all interested agents have arrived and have been accounted for before starting the process of selecting the winning bid. 
+A typical solution is to count the number of arriving bids and compare to the number of existing bidding agents. 
+In addition to the extra bookkeeping for counting, this requires also the uninterested agents to send a response. 
+In our ABS model, however, we solve this by means of a cooperation between the bidding and auctioneer agents.
+When the auctioneer agent sends out \lstinline|Announce| messages as part of its goal rule, it can easily suspend the goal rule until the bidding agents have completed the processing the \lstinline|Announce| messages, either by sending a bid or after simply having decided that \lstinline|offer| is not the same as the agent's \lstinline|goal|.
+But in order to select the winner, it is not enough to {\em receive} the bids; additionally, the bids need to have been processed.
+In fact, the \lstinline|await| statement inside the bidding agent on sending a \lstinline|Bid| message makes sure that the current bid has been accounted for by the auctioneer before the current method in the bidding agent completes. 
+Note additionally that since the execution of the goal rule inside the auctioneer agent is {\em suspended} and not {\em blocked}, the bid message may and will be processed before the goal rule is again enabled, after which the winner of the auction can be determined.
