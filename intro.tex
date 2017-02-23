@@ -1,18 +1,22 @@
 \section{Introduction}
 
 The Actor-based model of computation \cite{Agha} is particularly tailored to the description of distributed systems.  Actors represent processes that execute in parallel and interact via the asynchronous communication of messages.
-Messages in general are queued and processed in a run-to-completion mode of execution.
+
 
 The  Abstract Behavioral Specification (ABS) \cite{abs}  Language has been developed
 for modeling and analysis of distributed systems, e.g., recent developments
 have focussed on the modeling and analysis of Cloud applications \cite{Albert}.
  ABS integrates the Actor-based model of distributed and parallel computation with object-orientation:
 in ABS a message specifies a  call to one of the methods provided by the callee,
-as such it supports the ``programming to interfaces'' paradigm (as, for example, in the Axtor-based modeling language Rebeca \cite{Sirjani}).
-ABS further  extends the Actor-based model with  a high-level synchronization mechanism which allows actors to suspend the
+as such it supports the ``programming to interfaces'' paradigm.
+ABS further  extends the Actor-based model with  synchronous method calls and a high-level synchronization mechanism which allows actors to suspend the
 execution of the current message and schedule in a cooperative manner another
-queued message.  This  extension  is a powerful means for the expression and analysis
+queued message. 
+In contrast, in the Actor-based modeling language Rebeca \cite{Sirjani})
+messages are queued and processed in a run-to-completion mode of execution.
+This  extension  is a powerful means for the expression and analysis
 of fine-grained run-time dependencies between messages.
+
 
 %Mahdi: 
 %{\bfseries
@@ -21,10 +25,10 @@ of fine-grained run-time dependencies between messages.
 %Then it makes more sense to say we make it a full-fledged programming language via FLI and integration with Java.
 %}
 
-In this paper we introduce  and evaluate a new run-time system in Java for  the use of ABS as a full-fledged programming language which supports a Foreign Language Interface (FLI) for the import of Java librarries. The main challenge is the development of an efficient and scalable  thread-based implementation of cooperative scheduling
-which supports a translation of ABS models into Java source code.
-The basic feature of our proposed solution is the implementation of messages by means of
-lambda expressions (as provided by Java 8), i.e., the method call specified in a message
+In this paper we introduce  and evaluate a new run-time system in Java for  the use of ABS as a full-fledged programming language which supports a Foreign Language Interface (FLI) for the import of Java librarries. 
+The main challenge is the development of an efficient and scalable  thread-based soure-to-source implementation of cooperative scheduling which, in the presence of synchronous calls,   gives rise to the suspension of  entire call stacks generated
+from a message.
+The basic feature of our proposed solution is the implementation of messages by means of lambda expressions (as provided by Java 8), i.e., the method call specified in a message
 is translated into a corresponding lambda expression which is passed and stored as
 an object of type Callable or Runnable (depending on whether it returns  a result).
 This  feature forms  the basis of a run-time system which manages
@@ -35,18 +39,19 @@ to several other thread -based implementations in Java of cooperative scheduling
 
 \paragraph{Related Work}
 
-Our main motivation is  the  implementation of the ABS language  as a full-fledged Actor-based programming language which fully supports   the ``programming to interfaces'' paradigm.
+Our main motivation is  a Java  implementation of the ABS language  as a full-fledged Actor-based programming language which fully supports   the ``programming to interfaces'' paradigm.
 In contrast,  Java libraries for programming actors like Akka  \cite{Akka} mainly  provide  pure asynchronous  message passing which does not  support the use of application programming interfaces (API) and corresponding object-oriented techniques for code reuse.
-Furthermore,  distinguising features of the ABS comprise the high-level constructs for cooperative scheduling which allow the application of formal methods, e.g.,
+Furthermore,  distinguising features of the ABS comprise  high-level constructs for cooperative scheduling which allow the application of formal methods, e.g.,
 fornal analysis of deadlock \cite{deadlock}.
-On the other hand,  the Actor model in Scala \cite{Scala} does provide a limited suspension mechanism but its use is \emph{not} recommended because of its intricate semantics and degrade performance.
+For example,   the Actor model in Scala \cite{Scala} does provide a limited suspension mechanism but its use is \emph{not} recommended because of its intricate semantics and degradation of  performance.
 
 There exist various implementation schemes for cooperative scheduling in ABS.
 In the process-oriented approach sending a message  is implemented by the generation of a  corresponding process. This basic approach is followed in the Java backend of ABS \cite{abs,Schafer} and in the Erlang backend \cite{Erlang}.
-In section \ref{bench} we compare these backends with our solution.
+In section \ref{bench} we compare these backends with our solution in Java which allows to store messages before executing them.
 
-
-In contrast, in the Haskell backend \cite{Haskell}  the use of continuations allows
+The focus of our paper is  on an efficient implementation of cooperative scheduling in Java.
+Other target languages allow for different approaches:
+In the Haskell backend \cite{Haskell}, for example,   the use of continuations allows
 to queue  a message and dequeue it for execution and the C implementation of the
 Encore language \cite{Encore}  uses low-level (e.g., machine code) operations for
 storing and retrieving call stacks from memory.

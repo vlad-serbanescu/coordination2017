@@ -32,8 +32,7 @@ Furthermore, we will see some of the challenges encountered when implementing th
 
 \subsection{Proof of concept}
 \label{ag}
-
-
+Here we illustrate the use of ABS in implementing Agent-based modeling languages.
 Agent-based modeling has been shown to be a powerful means to express organizational abstractions of autonomous behavior, including auctioning systems \cite{agent_auction,bas16}.
 However, it is still a major challenge to generate  \emph{production} code from  high-level agent-based modeling concepts, e.g., the deliberation cycle which integrates  goal-oriented computation with an event-based communication approach. 
 To lower the barrier for adoption by industry, Dastani and Testerink \cite{bas16} propose a Java methodology which guides the development of agent-based models. 
@@ -45,11 +44,11 @@ In contrast,  Listing \ref{list:Agent} shows that modeling agents directly by ac
 It provides  a high-level design pattern in ABS capturing the code structure for modeling agents with a clear separation of message plans and goal rules. 
 The first three lines introduce the generic data types for goals, beliefs and messages.
 In ABS, one can define the goals, beliefs and messages as abstract data types.
-This makes it easy to define the plans in handling incoming messages and the rules in processing the goals by means of pattern matching against these model-specific data types.
+This makes it easy to define the plans for  handling incoming messages and the rules for processing the goals by means of pattern matching against these model-specific data types (lines 14 and 21, respectively, of Listing \ref{list:Agent} ).
 The general interface of an agent simply consists of a single method for receiving  messages. An  implementation of this interface consists of a set of beliefs and a set of goals which are initialized upon creation by means of a statement
 \lstinline|Agent a1= new A1(B,G)|.
-This statement  assigns to the variable a1 a dynamically generated  identity of the newly created agent and initializes its beliefs and goals.
-Finally,  the \lstinline|run()| method ensures proactive processing of the goal rules and allows for
+This statement  assigns to the variable a1 a dynamically generated  identity of the newly created agent and initializes its beliefs and goals (by  the actual parameters \lstinline|B| and \lstinline|G|).
+Finally,  the \lstinline|run()| method (line 27 of  Listing \ref{list:Agent}) ensures proactive processing of the goal rules and allows for
 interleaved processing of the messages by means of cooperative scheduling as invoked by the \lstinline|suspend| statement.
 Thanks to the flexibility of ABS, one can easily adopt variations of the above design pattern.
 For example, placing the \lstinline|suspend| statement inside the \lstinline|for| loop will allow interleaving individual goal rules with message plans.
