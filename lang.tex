@@ -145,7 +145,7 @@ class BiddingAgent(Item goal, Rat risk, Rat budget) implements Agent {
 			Announce(caller, offer) =>  {
 			  if (offer == goal) {
 			    Rat value = budget * risk;
-			    await caller ! Bid(value);
+			    await caller ! Bid(this, offer, value);
 			  } 
 			}
 		}
