@@ -44,7 +44,7 @@ In contrast,  Listing \ref{list:Agent} shows that modeling agents directly by ac
 It provides  a high-level design pattern in ABS capturing the code structure for modeling agents with a clear separation of message plans and goal rules. 
 The first three lines introduce the generic data types for goals, beliefs and messages.
 In ABS, one can define the goals, beliefs and messages as abstract data types.
-This makes it easy to define the plans for  handling incoming messages and the rules for processing the goals by means of pattern matching against these model-specific data types (lines 14 and 21, respectively, of Listing \ref{list:Agent} ).
+This makes it easy to define the plans for  handling incoming messages and the rules for processing the goals by means of pattern matching against these model-specific data types (lines 14 and 21, respectively, of Listing \ref{list:Agent}).
 The general interface of an agent simply consists of a single method for receiving  messages. An  implementation of this interface consists of a set of beliefs and a set of goals which are initialized upon creation by means of a statement
 \lstinline|Agent a1= new A1(B,G)|.
 This statement  assigns to the variable a1 a dynamically generated  identity of the newly created agent and initializes its beliefs and goals (by  the actual parameters \lstinline|B| and \lstinline|G|).
@@ -106,6 +106,7 @@ class A1(Set<Belief> init_beliefs, Set<Goal> init_goals)  implements Agent {
 
 
 \begin{table}
+	\caption{Characteristics of agents in an auctioning system}\label{tab:auc}
 \begin{tabular}{|l|c|c|}
 	\hline
 	& AuctioneerAgent & BiddingAgent \\
@@ -121,29 +122,42 @@ Goal Rules & start auction for the goal & \\
 
 
 
-Listing \ref{list:agent} shows a concrete model of an agent  in an auctioning system.
-Here, we define four types of messages sent and received by auctioning and bidding agents.  TODO: more explanation required, i.e., what is the initial goal?
+Listing \ref{list:agent} shows (selected parts of) a concrete model of an agent  in an auctioning system.
+This implementation corresponds to the characteristics described in Table \ref{tab:auc} for auctioning systems.
+Auctioneer and bidding agents have the goals of selling and buying items, respectively, which are modeled using the type \lstinline|Item|. 
+Furthermore in this table, we name a few possible parameters that may constitute the belief base of each agent and which may affect its behavior.
+For example, the value of a bid brought up by an agent could be defined to be proportional to its budget and risk factor, whereas outside some timing constraints, the agent is not interested in bidding any more. 
+Concretely, the above constitute an agent's {\em plan} in responding to the \lstinline|Announce| message.
+In Listing \ref{list:agent}, for simplicity of the presentation, we provide as the initial beliefs, only two rational numbers (written as \lstinline|Rat|), the risk factor which is between 0 and 1, and the budget.
+The message plan for handling \lstinline|Announce| is to calculate the bid value and respond to the auctioneer agent (references by the \lstinline|caller| argument).
+We explicitly add here the \lstinline|caller| parameter of type Agent to allow replying to messages. 
 
 
-\begin{lstlisting}[caption= Agent Model, label=list:agent]
+\begin{lstlisting}[caption=Agents in an auctioning system, label=list:agent]
 data Message = 
-Announce(Agent announceCaller, Item  toSell, Price price) | 
-Bid(Agent bidCaller, Item  toBuy, Price bid) |
-Sold(Agent soldCaller, Item soldItem) |
-Result(Set<Agent> winners, List<Price> prices, List<Agent> unhappy);
+Announce(Agent announceCaller, Item  toSell) | 
+Bid(Agent bidCaller, Item  toBuy, Price value) |
+Sold(Agent soldCaller, Item soldItem);
 
-class BiddingAgent(Set<Belief>  [] , Set<Goal > set[init_goal], Rat risk) implements Agent {
-	Set<Belief>  beliefs = [];
-	Set<Goal> goals = set[init_goal];
-        Rat risk = risk;
-	
+class BiddingAgent(Item goal, Rat risk, Rat budget) implements Agent {
 	Unit message(Message m) {
 		case m {
-			Announce(caller, slot, price) =>  { ...   } 
-		        Sold(caller, slot) => { ... }
+			Announce(caller, offer) =>  {
+			  if (offer == goal) {
+			    Rat value = budget * risk;
+			    await caller ! Bid(value);
+			  } 
+			}
 		}
 	}
 }
 \end{lstlisting}
 
+
+At this stage, we explain how the \lstinline|await| statement in sending the \lstinline|Bid| message can be useful.
+If we take one step back, when the auctioneer agent sends out its \lstinline|Announce| messages, it can easily await their completion to make sure it has received all bids.
+But in order to select the winner, it is not enough to {\em receive} the bids; additionally, the bids need to be processed.
+In fact, the \lstinline|await| statement on sending a \lstinline|Bid| message makes sure that the current bid has been accounted for by the auctioneer before the current method in the bidding agent completes. 
+To achieve a similar effect without cooperative scheduling (via the \lstinline|await| statement), one would typically need to count the number of responses to make sure all bid have arrived, which additionally means that uninterested agents still need to respond to the \lstinline|Announce| messages. 
+In our ABS implementation, not only we do not need to count the responses, but also uninterested agents (when \lstinline|offer| is not the same as the agents \lstinline|goal|) could simply skip sending a bid. 
 
