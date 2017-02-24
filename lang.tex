@@ -2,33 +2,33 @@
 
 \section{ABS Language Concepts}
 \label{lang}
-Our reference modeling language for analyzing cooperative scheduling is ABS \cite{abs}, an actor-based modeling language whose semantics offers high-level synchronization mechanisms for parallel and  distributed applications. This is a very powerful modeling language with extensive support for concurrent programming \cite{cog}, resource analysis \cite{saco}, deadlock analysis \cite{dead} and remote communication \cite{dis,cloud}. Our focus in this paper are  high-level constructs for modeling asynchronous communication between actors using messages and cooperative scheduling of these messages by an actor.
+Our reference modeling language for analyzing cooperative scheduling is ABS \cite{abs}, an actor-based modeling language whose semantics offers high-level synchronization mechanisms for parallel and  distributed applications. This is a very powerful modeling language with extensive support for concurrent programming \cite{cog}, resource analysis \cite{saco}, deadlock analysis \cite{dead} and remote communication \cite{dis,cloud}. ABS provides  high-level constructs for modeling asynchronous communication between actors using messages and cooperative scheduling of these messages by an actor.
 %Mahdi:
-{\bfseries the following are not the `focus of this paper' as suggested in the previous sentence}
-The second construct can have optional annotations that define custom schedulers in order to satisfy an actor's specific behavior. Asynchronous method calls can also be annotated with costs and deadlines which can be combined with cooperative scheduling policies to create a very powerful scheduler.
+%{\bfseries the following are not the `focus of this paper' as suggested in the previous sentence}
+These constructs can have optional annotations that define custom schedulers in order to model an actor's specific behavior. Asynchronous method calls can also be annotated with costs and deadlines which can be combined with cooperative scheduling policies to create a very powerful scheduler.
 
-\subsection{Asynchronous Method Invocation}\label{amc}
-In ABS all actors communicate with each other using asynchronous method invocation.
-This is written as ``a!m()" which sends a message to another actor ``a" to execute method ``m". 
-The semantics additionally allows for synchronous method calls that only change the internal state of an actor $\leftarrow$ {\bfseries what does this mean?}. 
-%ABS also has support for grouping Actors into Concurrent Object Groups (COG) that allow synchronous communication between actors of the same COG, but for the scope of our analysis and implementation simplicity we will assume that each actor is defined in its own group.  <-- then I would drop it from here
-Each ABS actor has a queue that stores all invocations coming from other actors as messages that are to be executed. 
-Each actor executes the messages sequentially in its own context while all actors run in parallel.  
-The result of an asynchronous method invocation can be captured in an future which the caller actor can use to retrieve the result, but also to block its current execution in order to synchronize with the callee actor. 
-This is done through the ``future.get" statement that a future supplies. % and has the same semantics as futures in other modeling and programming languages.  
-One may also send the future as parameter to a message, allowing other actors to use the results.
+\subsection{Method Invocations}\label{amc}
+The semantics of ABS allows for synchronous method calls of the form \lstinline|a.m()| or \lstinline|this.m()|. These calls have to block the callee actor until they return. Actors also communicate with each other using asynchronous method invocation. This is written as  \lstinline|a!m()| or \lstinline|this.m()| which sends a message to an actor to execute method \lstinline|m()|. The callee actor can then proceed with its execution without blocking. Each ABS actor has a queue that stores all asynchronous invocations coming from other actors as messages and executes them sequentially. An important observation to make here is that in modeling an application, ABS assumes there is no "message overtaking", that is the order of messages delivered from one particular actor to another is the same as the order in which they were generated.  The result of a message execution can be captured in an future which the caller actor can use to retrieve the result, but also to block its current execution using \lstinline|f.get|  in order to synchronize with the actor completing the future. One may also send the future as parameter of a message, allowing other actors to synchronize and use the results. ABS also has support for grouping Actors into Concurrent Object Groups (COG) and only actors belonging to the same group can communicate synchronously. The semantics of ABS allow this behavior as a call \lstinline|a.m()| can be translated as \lstinline|Future f=a!m(); f.get|. The only issue appears when we have a call like \lstinline|this.m()| as such a translation would result in a deadlock for the actor. In order to have a solution, we will first explain the second language concept of ABS.
+%The semantics additionally allows for synchronous method calls that only change the internal state of an actor $\leftarrow$ {\bfseries what does this mean?}. 
 
-An important observation to make here is that in modeling an application, ABS assumes there is no ``message overtaking", that is the order of messages delivered from one particular actor to another is the same as the order in which they were generated. 
-This is a constraint that our implementation needs to take into account and a synchronization mechanism as will be described in our modeled application later in this section $\leftarrow$ {\bfseries do we? make sure it is not overemphasized here.}. 
+
+%but for the scope of our analysis and implementation simplicity we will assume that each actor is defined in its own group.  <-- then I would drop it from here
+
+
+%The result of an asynchronous method invocation can be captured in an future which the caller actor can use to retrieve the result, but also to block its current execution in order to synchronize with the% callee actor. 
+%This is done through the ``future.get" statement that a future supplies. % and has the same semantics as futures in other modeling and programming languages.  
+
+
+%This is a constraint that our implementation needs to take into account and a synchronization mechanism as will be described in our modeled application later in this section $\leftarrow$ {\bfseries do we? make sure it is not overemphasized here.}. 
 
 
 \subsection{Await Construct}
-The ``await" statement of ABS offers a high level mechanism that controls execution within an actor based on its internal state or the availability of the result of an asynchronous call via futures. A statement like "await future?" differs from "future.get" as it does not block the entire execution of the actor, but instead block the current message from which the ``await" statement was called and allows the actor to continue with executing other messages that are available in its queue. Similarly, for example "await this.boolVar" will suspend the current message executing this statement until the field boolVar is set to true (while another method is being executed). In both uses of the "await" construct the suspended message will be made available once the future is completed or the boolean condition evaluates to true. 
-Even though a very simple concept, such a construct can simplify the logic of the program significantly. The effectiveness of this mechanism will be illustrated within the example in Section \ref{ag}. 
-Furthermore, we will see some of the challenges encountered when implementing this behavior in Sections \ref{comp} and \ref{run}.        
+The "await" statement of ABS offers a high level mechanism that controls execution within an actor based on its internal state or the availability of the result of an asynchronous call via futures. A statement like \lstinline|await future?| differs from "future.get" as it does not block the entire execution of the actor, but instead blocks the current message from which the "await" statement was called and allows the actor to continue with executing other messages that are available in its queue. Similarly, for example \lstinline|await this.boolVar| will suspend the current message executing this statement until the field boolVar is set to true (while another method is being executed). In both uses of the "await" construct the suspended message will be made available once the future is completed or the boolean condition evaluates to true. Now we have a simple solution for translating \lstinline|this.m()| without creating a deadlock by translating it to \lstinline|Future f=a!m(); await f?|, but we still need to preserve the logic and resume from this point once \lstinline|m()| has completed. The basic non-deterministic scheduling policy does not guarantee this unless at the semantic level there is a specific contruct\cite{creol,resume}. 
 
-- the main concepts: async calls, await on boolean and futures, each object has its own queue.
-- example for coroutines (Paul Klint paper at SEN)
+Even though a very simple concept, these constructs can simplify the logic of the program significantly, but we will see some of the challenges encountered when implementing this behavior in Sections \ref{comp} and \ref{run}.        
+
+%- the main concepts: async calls, await on boolean and futures, each object has its own queue.
+%- example for coroutines (Paul Klint paper at SEN)
 
 \subsection{Proof of concept}
 \label{ag}
@@ -44,7 +44,7 @@ In contrast,  Listing \ref{list:Agent} shows that modeling agents directly by ac
 It provides  a high-level design pattern in ABS capturing the code structure for modeling agents with a clear separation of message plans and goal rules. 
 The first three lines introduce the generic data types for goals, beliefs and messages.
 In ABS, one can define the goals, beliefs and messages as abstract data types.
-This makes it easy to define the plans for  handling incoming messages and the rules for processing the goals by means of pattern matching against these model-specific data types (lines 14 and 21, respectively, of Listing \ref{list:Agent}).
+This makes it easy to define the plans for  handling incoming messages and the rules for processing the goals by means of pattern matching against these model-specific data types (lines 14 and 21, respectively, of Listing \ref{list:Agent} ).
 The general interface of an agent simply consists of a single method for receiving  messages. An  implementation of this interface consists of a set of beliefs and a set of goals which are initialized upon creation by means of a statement
 \lstinline|Agent a1= new A1(B,G)|.
 This statement  assigns to the variable a1 a dynamically generated  identity of the newly created agent and initializes its beliefs and goals (by  the actual parameters \lstinline|B| and \lstinline|G|).
@@ -106,7 +106,6 @@ class A1(Set<Belief> init_beliefs, Set<Goal> init_goals)  implements Agent {
 
 
 \begin{table}
-	\caption{Characteristics of agents in an auctioning system}\label{tab:auc}
 \begin{tabular}{|l|c|c|}
 	\hline
 	& AuctioneerAgent & BiddingAgent \\
@@ -122,42 +121,29 @@ Goal Rules & start auction for the goal & \\
 
 
 
-Listing \ref{list:agent} shows (selected parts of) a concrete model of an agent  in an auctioning system.
-This implementation corresponds to the characteristics described in Table \ref{tab:auc} for auctioning systems.
-Auctioneer and bidding agents have the goals of selling and buying items, respectively, which are modeled using the type \lstinline|Item|. 
-Furthermore in this table, we name a few possible parameters that may constitute the belief base of each agent and which may affect its behavior.
-For example, the value of a bid brought up by an agent could be defined to be proportional to its budget and risk factor, whereas outside some timing constraints, the agent is not interested in bidding any more. 
-Concretely, the above constitute an agent's {\em plan} in responding to the \lstinline|Announce| message.
-In Listing \ref{list:agent}, for simplicity of the presentation, we provide as the initial beliefs, only two rational numbers (written as \lstinline|Rat|), the risk factor which is between 0 and 1, and the budget.
-The message plan for handling \lstinline|Announce| is to calculate the bid value and respond to the auctioneer agent (references by the \lstinline|caller| argument).
-We explicitly add here the \lstinline|caller| parameter of type Agent to allow replying to messages. 
+Listing \ref{list:agent} shows a concrete model of an agent  in an auctioning system.
+Here, we define four types of messages sent and received by auctioning and bidding agents.  TODO: more explanation required, i.e., what is the initial goal?
 
 
-\begin{lstlisting}[caption=Agents in an auctioning system, label=list:agent]
+\begin{lstlisting}[caption= Agent Model, label=list:agent]
 data Message = 
-Announce(Agent announceCaller, Item  toSell) | 
-Bid(Agent bidCaller, Item  toBuy, Price value) |
-Sold(Agent soldCaller, Item soldItem);
+Announce(Agent announceCaller, Item  toSell, Price price) | 
+Bid(Agent bidCaller, Item  toBuy, Price bid) |
+Sold(Agent soldCaller, Item soldItem) |
+Result(Set<Agent> winners, List<Price> prices, List<Agent> unhappy);
 
-class BiddingAgent(Item goal, Rat risk, Rat budget) implements Agent {
+class BiddingAgent(Set<Belief>  [] , Set<Goal > set[init_goal], Rat risk) implements Agent {
+	Set<Belief>  beliefs = [];
+	Set<Goal> goals = set[init_goal];
+        Rat risk = risk;
+	
 	Unit message(Message m) {
 		case m {
-			Announce(caller, offer) =>  {
-			  if (offer == goal) {
-			    Rat value = budget * risk;
-			    await caller ! Bid(this, offer, value);
-			  } 
-			}
+			Announce(caller, slot, price) =>  { ...   } 
+		        Sold(caller, slot) => { ... }
 		}
 	}
 }
 \end{lstlisting}
 
-One challenge in modeling the auctioneer agent is how to make sure all bids from all interested agents have arrived and have been accounted for before starting the process of selecting the winning bid. 
-A typical solution is to count the number of arriving bids and compare to the number of existing bidding agents. 
-In addition to the extra bookkeeping for counting, this requires also the uninterested agents to send a response. 
-In our ABS model, however, we solve this by means of a cooperation between the bidding and auctioneer agents.
-When the auctioneer agent sends out \lstinline|Announce| messages as part of its goal rule, it can easily suspend the goal rule until the bidding agents have completed the processing the \lstinline|Announce| messages, either by sending a bid or after simply having decided that \lstinline|offer| is not the same as the agent's \lstinline|goal|.
-But in order to select the winner, it is not enough to {\em receive} the bids; additionally, the bids need to have been processed.
-In fact, the \lstinline|await| statement inside the bidding agent on sending a \lstinline|Bid| message makes sure that the current bid has been accounted for by the auctioneer before the current method in the bidding agent completes. 
-Note additionally that since the execution of the goal rule inside the auctioneer agent is {\em suspended} and not {\em blocked}, the bid message may and will be processed before the goal rule is again enabled, after which the winner of the auction can be determined.
+

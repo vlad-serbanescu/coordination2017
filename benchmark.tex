@@ -3,14 +3,17 @@
 The main problem that we encountered  when implementing cooperative scheduling was saving the context of an execution and resuming from that context. To do this in Java using threads and context switches is simply too expensive and heavily limits the application to the number of native threads that can be created. 
 
 To measure the improvement provided by Java 8 features, we benchmark a
-simple example that is illustrated in Figure \ref{sf}. In the
-example we have one actor containing an  which receives a large
-number of messages stored in its queue. This message recursively calls
-a function that creates a stack frame after which a message is
-sent to a different Actor to run in parallel a function that computes a large number of trigonometric operations . The object is then suspended to await the
-result of this function, resulting in the requirement to save the stack frame in order to allow the next message from the queue to run
-on the actor.  We varied the total number
-of messages in the object's queue to compare performance between a trivial thread based approach and our optimized solution in the Java backend for ABS. 
+simple example that is illustrated in Figure \ref{sf} and Listing \ref{absex}. 
+This example creates an Actor of type "A" and sends a large number of messages to it to execute a method \lstinline|recursive_m(5,id)|. This method creates a call chain of size 5 before sending an asynchronous message to itself to execute a basic method \lstinline|compute()| and awaits on its result.
+
+%In the
+%example we have one actor containing an  which receives a large
+%number of messages stored in its queue. This message recursively calls
+%a function that creates a stack frame after which a message is
+%sent to a different Actor to run in parallel a function that computes a large number of trigonometric operations . The object is then suspended to await the
+%result of this function, resulting in the requirement to save the stack frame in order to allow the next message from the queue to run
+%on the actor.  We varied the total number
+%of messages in the object's queue to compare performance between a trivial thread based approach and our optimized solution in the Java backend for ABS. 
 
 \begin{figure}
 	\label{sf}
@@ -18,6 +21,55 @@ of messages in the object's queue to compare performance between a trivial threa
 	\includegraphics[scale=0.6]{scenario}
 	\caption{Cooperative Scheduling Benchmark Scenario}
 \end{figure}
+
+
+\begin{lstlisting}[caption= ABS Example, label=absex]
+module Recursive;
+
+interface Ainterface {
+	Int recursive_m(Int i, Int id);
+}
+
+class A() implements Ainterface{
+
+	Int result=0;
+	
+	Int recursive_m(Int i, Int id){
+		if (i>0){
+			this.recursive_m(i - 1,id);	
+		}
+		else{
+			Fut<Int> f = this ! compute( );
+			await f ?;
+		}
+		return 1;
+	}
+	
+	Int compute( ){
+		result = result + 1;
+		return result;
+	}
+}
+
+{ // Main block:
+
+	Int i = 0;	
+	Ainterface master = new A ( );
+	List<Fut<Int>> futures = Nil;
+	
+	while( i < 500){		
+		Fut<Int> f = master ! recursive_m (5, i);
+		futures = Cons( f, futures );
+		i = i + 1 ;
+	}
+	
+	while ( futures != Nil ){
+		Fut<Int> f1 = head(futures);
+		futures = tail(futures);
+		Int r = f1.get;
+	}
+}
+\end{lstlisting}
 
 \par The results are shown in
 Figure \ref{jj}. The performance figures presented are for one
