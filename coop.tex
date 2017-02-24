@@ -57,6 +57,7 @@ The only problem that remains is how to save this call stack without using a thr
 \end{figure}
 
 \subsection{Optimizations for the JVM}
+\label{optimizations}
 As we have seen and will also benchmark in Section \ref{bench} we investigate the performance impact of eliminating the large number of expensive threads in Java that are required in order to implement the cooperative scheduling model. Using this data-oriented approach for saving contexts we limit any application to the system's main memory size, but added to that we also obtain some other optimizations related to Java's features.
 
 \paragraph{Demand-driven Approach}
