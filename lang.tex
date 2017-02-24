@@ -52,37 +52,23 @@ In ABS  a statement  of the form \lstinline|await f?|
 suspends the executing process which can only be rescheduled if the method
 invocation corresponding to the future \lstinline|f| has computed the return value.
 Similarly,   a statement  of the form \lstinline|await b|, where \lstinline|b|  denotes a boolean expression,  suspends the executing process which can only be rescheduled if  \lstinline|b| evaluates to true.
+Listing \ref{ex} sketches a pattern of method definitions which gives rise to a suspended stack of synchronous calls; assume an asynchronous call to \lstinline|m1|; this may generate a synchronous call to \lstinline|m2| and subsequently this invocation may suspend on the future f. The main challenge addressed in this paper is to have an efficient implementation of such a suspended stack of synchronous calls.
 %=======
 %The "await" statement of ABS offers a high level mechanism that controls execution within an actor based on its internal state or the availability of the result of an asynchronous call via futures. A statement like \lstinline|await future?| differs from "future.get" as it does not block the entire execution of the actor, but instead blocks the current message from which the "await" statement was called and allows the actor to continue with executing other messages that are available in its queue. Similarly, for example \lstinline|await this.boolVar| will suspend the current message executing this statement until the field boolVar is set to true (while another method is being executed). In both uses of the "await" construct the suspended message will be made available once the future is completed or the boolean condition evaluates to true. Now we have a simple solution for translating \lstinline|this.m()| without creating a deadlock by translating it to \lstinline|Future f=a!m(); await f?|, but we still need to preserve the logic and resume from this point once \lstinline|m()| has completed. The basic non-deterministic scheduling policy does not guarantee this unless at the semantic level there is a specific contruct\cite{creol,resume}.  The sketch of such a scenario is given in Listing \ref{ex}. 
 %
-%\begin{lstlisting}[caption=ABS Example, label=ex]
-%class A() implements Ainterface{
-%	
-%	Int m1(Int i){
-%		...;
-%		this.m2( i );
-%		...
-%	}
-%	
-%	Int m2(Int i){
-%		...;
-%		this.m3( );
-%		...
-%	}
-%	Int m3( ){
-%		AInterface a_object = new A();
-%		Fut<Int> f = a_object!m1( );
-%		await f?
-%		....
-%	}
-%}
-%
-%{ // Main block:
-%	Ainterface master = new A ( );
-%	Fut<Int> f = master ! m1( 5 );
-%	f.get;
-%}
-%\end{lstlisting}
+\begin{lstlisting}[caption=ABS Example, label=ex]
+	m1( ){
+		...;
+		this.m2(  );
+		...	//continuation of m1 <=>$C(m_1)$
+	}
+
+	m2( ){
+		...
+		await f?
+		.... //continuation of m2 <=>$C(m_2)$
+	}
+\end{lstlisting}
 %>>>>>>> Stashed changes
 
 In both cases  the executing process is suspended and another (enabled) process (belonging to the same actor, or more generally, to the same COG)  can be scheduled for execution.
@@ -121,9 +107,7 @@ interleaved processing of the messages by means of cooperative scheduling as inv
 Thanks to the flexibility of ABS, one can easily adopt variations of the above design pattern.
 For example, placing the \lstinline|suspend| statement inside the \lstinline|for| loop will allow interleaving individual goal rules with message plans.
 Furthermore, application-specific scheduling policies \cite{rabs,cog}  may be applied if desired, for example, to give some goals or messages higher priorities.
-The actual  instances of  this general  ABS pattern for the description of the auctioning agents
-(see  TODO)
-additionally use cooperative scheduling for a barrier synchronization between the bidding agents
+The actual  instances of  this general  ABS pattern for the description of the auctioning agents (see  Appendix 1) additionally use cooperative scheduling for a barrier synchronization between the bidding agents
 and the auctioneer. 
 
 
