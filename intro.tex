@@ -41,24 +41,22 @@ to several other thread -based implementations in Java of cooperative scheduling
 \paragraph{Related Work}
 
 Our main motivation is  a Java  implementation of the ABS language  as a full-fledged Actor-based programming language which fully supports   the ``programming to interfaces'' paradigm.
-In contrast,  Java libraries for programming actors like Akka  \cite{Akka} mainly  provide  pure asynchronous  message passing which does not  support the use of application programming interfaces (API) and corresponding object-oriented techniques for code reuse.
-% Mahdi
-$\leftarrow$ {\bfseries I don't understand this sentence. Possibly you want to say that in Akka/Java a message is only typed as a Java Object, so no static typing on messages, nor are they part of the actor interface.}
+In contrast,  Java libraries for programming actors like Akka  \cite{Akka} mainly  provide  pure asynchronous  message passing which does not  support the use of application programming interfaces (API)  because in Akka/Java a message is only typed as a Java Object, so there is no static typing of messages, nor are messages part of the actor interface.
 Furthermore,  distinguishing features of the ABS comprise  high-level constructs for cooperative scheduling which allow the application of formal methods, e.g.,
 formal analysis of deadlock \cite{deadlock}.
-For example,   the Actor model in Scala \cite{Scala} does provide a  suspension mechanism but its use is \emph{not} recommended because of it blocks the whole thread and causes
+For example,   the Actor model in Scala \cite{Scala} does provide a  suspension mechanism but its use is \emph{not} recommended because it actually blocks the whole thread and causes
 %its intricate semantics and 
 degradation of  performance.
-It is possible to register a {\em continuation} piece of code to run upon completion of a future, but that may run in a separate thread which in fact breaks the actor semantics and may cause race conditions inside the actor.
+It is possible to register a {\em continuation} piece of code to run upon completion of a future, but that may run in a separate thread which however breaks the actor semantics and may cause race conditions inside the actor.
 
 There exist various implementation schemes for cooperative scheduling in ABS.
 In the process-oriented approach sending a message  is implemented by the generation of a  corresponding process. This basic approach is followed in the Java backend of ABS \cite{abs,Schafer} and in the Erlang backend \cite{Erlang}.
-In section \ref{bench} we compare these backends with our solution in Java which allows to store messages before executing them.
+In section \ref{bench} we compare these backends with our solution in Java which allows to store messages (as objects of type Callable or Runnable) before executing them.
 
 The focus of our paper is  on an efficient implementation of cooperative scheduling in Java.
 Other target languages allow for different approaches:
 In the Haskell backend \cite{Haskell}, for example,   the use of continuations allows
-to queue  a message and dequeue it for execution and the C implementation of the
+to queue  a message as a process and dequeue it for execution and the C implementation of the
 Encore language \cite{Encore}  uses low-level (e.g., machine code) operations for
 storing and retrieving call stacks from memory.
 
