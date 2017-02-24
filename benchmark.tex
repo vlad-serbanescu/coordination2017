@@ -3,7 +3,7 @@
 The main problem that we encountered  when implementing cooperative scheduling was saving the context of an execution and resuming from that context. To do this in Java using threads and context switches is simply too expensive and heavily limits the application to the number of native threads that can be created. 
 
 To measure the improvement provided by Java 8 features, we benchmark a
-simple example that is illustrated in Figure \ref{sf} and Listing \ref{absex}. 
+simple example that is illustrated in Listing \ref{absex}. 
 This example creates an Actor of type "A" and sends a large number of messages to it to execute a method \lstinline|recursive_m(5,id)|. This method creates a call chain of size 5 before sending an asynchronous message to itself to execute a basic method \lstinline|compute()| and awaits on its result.
 
 %In the
@@ -15,15 +15,15 @@ This example creates an Actor of type "A" and sends a large number of messages t
 %on the actor.  We varied the total number
 %of messages in the object's queue to compare performance between a trivial thread based approach and our optimized solution in the Java backend for ABS. 
 
-\begin{figure}
-	\label{sf}
-	\centering
-	\includegraphics[scale=0.6]{scenario}
-	\caption{Cooperative Scheduling Benchmark Scenario}
-\end{figure}
+%\begin{figure}
+%	\label{sf}
+%	\centering
+%	\includegraphics[scale=0.6]{scenario}
+%	\caption{Cooperative Scheduling Benchmark Scenario}
+%\end{figure}
 
 
-\begin{lstlisting}[caption= ABS Example, label=absex]
+\begin{lstlisting}[caption= ABS Benchmark Example, label=absex]
 module Recursive;
 
 interface Ainterface {
@@ -71,13 +71,10 @@ class A() implements Ainterface{
 }
 \end{lstlisting}
 
-\par The results are shown in
-Figure \ref{jj}. The performance figures presented are for one
-actor that is running 16--8192 method invocations, each with a
-recursive stack frame of 5 and awaits the
-completion of 10000 trigonometric functions before completing. 
+\par Figure \ref{jj}. The performance figures presented are for one actor that is running 500--2500 method invocations. 
+The results compare the full process-oriented approach to the proposed data-oriented approach for the "pure" overhead that appears at the runtime implementation of cooperative scheduling. It is important to observe that the number of invocation results in a double amount of messages that need to be handled by the actor. We can observe both a significant reduction in overhead and no limitation in the application as a result of the trade-off of saving continuations in memory instead of keeping them inside native threads.
 % Mahdi
-$\leftarrow$ {\bfseries didn't we remove the computation? such that the execution time is pretty much ``pure'' overhead, which is in fact what we intend to measure and compare.}
+%$\leftarrow$ {\bfseries didn't we remove the computation? such that the execution time is pretty much ``pure'' overhead, which is in fact what we intend to measure and compare.}
 
 
 \begin{figure}
@@ -87,7 +84,7 @@ $\leftarrow$ {\bfseries didn't we remove the computation? such that the executio
 	\caption{Performance figures of the two Java implementations for Cooperative Scheduling}
 \end{figure}
 
-\par These results do show that our solution mitigates the limitation of heavy native Java threads. However, while our solution is catered towards a widely-used language, it doesn't mean that there aren't other languages that are more suited to implement ABS language concepts efficiently and without these limitations. In Section \ref{scheme} we listed several optimizations that were inferred from out implementation solution. What we want to do is compare this solution to an ABS backend implemented in Erlang that uses the same Thread-based approach but does not suffer from any limitation of native threads. We want to observe if our data-oriented approach can be comparable to Erlang's lightweight threads. The result in Figure \ref{ej} show that our approach fares much better once the number of messages passes 1024. This result also strengthens ABS purpose to provide a programming language for real applications.
+\par While our solution is catered towards a widely-used language, it doesn't mean that there aren't other languages that are more suited to implement ABS language concepts efficiently and without these limitations. In Section \ref{scheme} we listed several optimizations that were inferred from out implementation solution. What we want to do is compare this solution to an ABS backend implemented in Erlang that uses the same Thread-based approach but does not suffer from any limitation of native threads explosion. We want to observe if our data-oriented approach can be comparable to Erlang's lightweight threads. The result in Figure \ref{ej} show that our approach fares much better once the number of messages passes 2000. This result also strengthens ABS purpose to provide a programming language for real applications.
 
 \begin{figure}
 	\label{ej}

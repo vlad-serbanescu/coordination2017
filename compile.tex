@@ -1,15 +1,19 @@
-\section{Continuation Generation at Compile Time}
+\section{Generation and Scheduling of Continuations}
 \label{comp}
 
-When a method releases the processor, its continuation must be scheduled as a new task. There are two problems with that. Firstly, the continuation is not just another method, but part of it, and thus cannot just be turned into a Runnable, so that it can be enqueued. Secondly, in presence of synchronous calls, the whole stack needs to be part of the continuation. First, we assume no stack is present and try to address the first problem. Then we propose a solution to the stack issue in an orthogonal way. Theoretically, at runtime, you simply could make a pointer to the current “instruction pointer” and use it as the continuation. Of course, you need to store all the local variables. This would be a viable solution, if we could at runtime create a method whose entry point is the current (or more specifically, the next) instruction (or in terms of Java, the next bytecode instruction). This method should take as parameters, all the local variables of the currently executing method, including its parameters. Another solution is to do a preprocessing and statically create these methods.
+When a task releases the processor, its continuation must be scheduled as a new task. There are two problems with that. Firstly, the continuation is not just another method, but part of it, and thus cannot just be turned into a Runnable, so that it can be enqueued. Secondly, in presence of synchronous calls, the whole stack needs to be part of the continuation. 
 
-\subsection{Preprocessing continuations}
+%First, we assume no stack is present and try to address the first problem. Then we propose a solution to the stack issue in an orthogonal way. Theoretically, at runtime, you simply could make a pointer to the current “instruction pointer” and use it as the continuation. Of course, you need to store all the local variables. This would be a viable solution, if we could at runtime create a method whose entry point is the current (or more specifically, the next) instruction (or in terms of Java, the next bytecode instruction). This method should take as parameters, all the local variables of the currently executing method, including its parameters. Another solution is to do a preprocessing and statically create these methods.
+
+\subsection{Preprocessing continuations at compile time}
 Assuming that code is written in ABS and then compiled to Java, we can do the preprocessing in ABS or in Java. But possibly this is better to do at Java because then this code would apply also when using the proposed library directly in Java. The following explains how to do the preprocessing. The idea is that every await is replaced by a method call. For example:
 
 \begin{lstlisting}
-void m1(p) {
+void m1( Int p) {
+	Boolean b;
+	Int i;
 	while (b) {
-		await g;  // let say this is await number 1
+		await this.g;  // let say this is await number 1, and assume g is a class field
 		i = 0;
 	}
 }
@@ -19,13 +23,15 @@ will translate to:
 
 \begin{lstlisting}
 
-void m1(p) {
-while (b) { 
-	if (!g) {
-		this ! await_1(i, b, p);  // assume ! represents async send 
-		return;
-		}
-		i = 0;
+void m1(Int p) {
+	Boolean b;
+	Int i;
+	while (b) { 
+			if (!g) {
+					this ! await_1(i, b, p);  
+					return;
+				}
+				i = 0;
 	}
 }
 \end{lstlisting}
@@ -45,7 +51,7 @@ For the above example, we get the following:
 Cont(m1) = Cont(while(b) { await g; i = 0 })
 = Cont(await g; i = 0); while(b) {await g; i = 0 }
 = { i = 0;  while(b) {await g; i = 0 } }
-boolean await_1(i, b, p) {
+void await_1(Int i, Boolean b, Int p) {
 	i = 0;  
 	while(b) {
 		if (!g) {
@@ -57,8 +63,15 @@ boolean await_1(i, b, p) {
 }
 \end{lstlisting}
 
-\subsection{Stack calls and continuation}
-A fully asynchronous environment means to change a synchronous call "x = o.m();" into an asynchronous call plus an await like "f = o!m(); x = await f.get();". There are two problems here. When the callee is the same actor (on on the same COG in ABS world), first, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Luckily, both can be implemented by one change to the scheduler. This change regards the implementation of the task. That task will need another flag "isSynchCall" and when that flag is true, it will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. This will work for the return also assuming the method described below for handling the completion of futures.
+\subsection{Scheduling continuations at runtime}
+A fully asynchronous environment means to change a synchronous call \lstinline|x = this.m();| into an asynchronous call plus an await like \lstinline|f = this!m(); x = await f?;|. There are two problems here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Luckily, both can be implemented by changing the non-deterministic behavior of the Main Task. There are two constrains that we impose to preserve the chain of synchronous calls.
+
+\begin{itemize}
+	\item We set a flag "isSyncCall" in the task that is calling "m" when that flag is true, it will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. 
+	\item Assuming that there is no "message overtaking" we know that messages that are part of a synchronous call chain arrive in the Actor's queue in a FIFO order. Therefore we can label each call chain with a number "syncContext" and all messages part of that call chain will have this number. Therefore when the Main Task completes a message labeled with a particular number it will take from the queue the next available message with the same label and execute it. Finally when the last message with that label is complete, the next message will be taken arbitrarily.
+\end{itemize}
+
+%This change regards the implementation of the Main Task. That task will need another flag "isSynchCall" and when that flag is true, it will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. 
 
 %Completion of futures
 
