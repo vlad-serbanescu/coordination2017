@@ -1,7 +1,7 @@
 \section{Generation and Scheduling of Continuations}
 \label{comp}
 
-When cooperative scheduling occurs, the continuation must be scheduled as a new task. There are two problems with that. Firstly, the continuation is not just another method, but part of it, and thus cannot just be turned into a Runnable, so that it can be enqueued. Secondly, in presence of synchronous calls, the whole stack needs to be part of the continuation and scheduled accordingly. 
+When cooperative scheduling occurs, the continuation must be created and then scheduled as a new task. There are two problems with that. Firstly, the continuation is not just another method, but part of it, and thus cannot just be turned into a Runnable, so that it can be enqueued. Secondly, in presence of synchronous calls, the whole stack needs to be part of the continuation and scheduled accordingly. 
 
 %First, we assume no stack is present and try to address the first problem. Then we propose a solution to the stack issue in an orthogonal way. Theoretically, at runtime, you simply could make a pointer to the current “instruction pointer” and use it as the continuation. Of course, you need to store all the local variables. This would be a viable solution, if we could at runtime create a method whose entry point is the current (or more specifically, the next) instruction (or in terms of Java, the next bytecode instruction). This method should take as parameters, all the local variables of the currently executing method, including its parameters. Another solution is to do a preprocessing and statically create these methods.
 
