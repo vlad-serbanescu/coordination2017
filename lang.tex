@@ -12,8 +12,8 @@ For a detailed description of the syntax of the ABS language we refer to \cite{a
 
 \subsection{Method Invocations}\label{amc}
 Abstracting from the syntax of the actual parameters,
-in ABS an asynchronous invocation of a method \lstinline|m| of an actor \lstinline|a | is described by a statement
-\lstinline|Future f=a!m(...)|, where f is a future used to store the return value
+in ABS an asynchronous invocation of a method \lstinline|m| of an actor \lstinline|a| is described by a statement
+\lstinline|Future f=a!m()|, where f is a future used to store the return value
 (asuming that m contains a return statement).
 In our backend this invocation will be stored in a queue of the called actor a.
 Futures can be passed around as references and provide a get operation
@@ -23,11 +23,11 @@ the return value.
 
 Again abstracting from the syntax of the actual parameters,
 ABS additionally features synchronous method calls described in the standard manner
-by statements of the form \lstinline| x=a.m(...)| (also assuming here that the method m returns a value). In case the called actor \lstinline|a| belongs to a different 
+by statements of the form \lstinline| x=a.m()| (also assuming here that the method m returns a value). In case the called actor \lstinline|a| belongs to a different 
 COG (i.e., Concurrent Object Group which shares one thread of control, see \cite{abs})
 than the caller the semantics of such a synchronous call can be translated
-by \lstinline|Future f=a!m(\bar{e}); x= f.get|, for some future f (of the appropriate type).
-In case the called actor \lstinline|a |and the caller belong to the same COG such a synchronous call can be translated by \lstinline|Future f=a!m(\bar{e}); x= f.get;resume|,
+by \lstinline|Future f=a!m(); x= f.get|, for some future f (of the appropriate type).
+In case the called actor \lstinline|a |and the caller belong to the same COG such a synchronous call can be translated by \lstinline|Future f=a!m( ); x= f.get;resume|,
 where the auxiliary statement \lstinline|resume| (as introduced in \cite{resume})
 is implememted in our Java backend by a specific scheduling policy which preserves the synchronous call stack.
 This will be described in more detail in Section \ref{run}.
@@ -51,7 +51,9 @@ This will be described in more detail in Section \ref{run}.
 In ABS a statement of the form \lstinline|await f?|
 suspends the executing process which can only be rescheduled if the method
 invocation corresponding to the future \lstinline|f| has computed the return value.
-Similarly,a statement of the form \lstinline|await b|, where \lstinline|b| denotes a boolean expression, suspends the executing process which can only be rescheduled if \lstinline|b| evaluates to true.
+Similarly, a statement of the form \lstinline|await b|, where \lstinline|b| denotes a boolean expression, suspends the executing process which can only be rescheduled if \lstinline|b| evaluates to true. In both cases the executing process is suspended and another (enabled) process (belonging to the same actor, or more generally, to the same COG) can be scheduled for execution.
+In contrast, a statement like \lstinline|f.get| does not allow the scheduling of
+another process of the same actor (COG). It thus blocks the entire actor (COG). Listing \ref{ex} sketches a pattern of method definitions which gives rise to a suspended stack of synchronous calls; assume an asynchronous call to \lstinline|m1|; this may generate a synchronous call to \lstinline|m2| and subsequently this invocation may suspend on the future f. The main challenge addressed in this paper is to have an efficient implementation of such a suspended stack of synchronous calls.
 
 %=======
 %The "await" statement of ABS offers a high level mechanism that controls execution within an actor based on its internal state or the availability of the result of an asynchronous call via futures. A statement like \lstinline|await future?| differs from "future.get" as it does not block the entire execution of the actor, but instead blocks the current message from which the "await" statement was called and allows the actor to continue with executing other messages that are available in its queue. Similarly, for example \lstinline|await this.boolVar| will suspend the current message executing this statement until the field boolVar is set to true (while another method is being executed). In both uses of the "await" construct the suspended message will be made available once the future is completed or the boolean condition evaluates to true. Now we have a simple solution for translating \lstinline|this.m()| without creating a deadlock by translating it to \lstinline|Future f=a!m(); await f?|, but we still need to preserve the logic and resume from this point once \lstinline|m()| has completed. The basic non-deterministic scheduling policy does not guarantee this unless at the semantic level there is a specific contruct\cite{creol,resume}. The sketch of such a scenario is given in Listing \ref{ex}. 
@@ -71,9 +73,7 @@ Similarly,a statement of the form \lstinline|await b|, where \lstinline|b| denot
 \end{lstlisting}
 %>>>>>>> Stashed changes
 
-In both cases the executing process is suspended and another (enabled) process (belonging to the same actor, or more generally, to the same COG) can be scheduled for execution.
-In contrast, a statement like \lstinline|f.get| does not allow the scheduling of
-another process of the same actor (COG). It thus blocks the entire actor (COG). Listing \ref{ex} sketches a pattern of method definitions which gives rise to a suspended stack of synchronous calls; assume an asynchronous call to \lstinline|m1|; this may generate a synchronous call to \lstinline|m2| and subsequently this invocation may suspend on the future f. The main challenge addressed in this paper is to have an efficient implementation of such a suspended stack of synchronous calls.
+
 
 %The "await" statement of ABS offers a high level mechanism that controls execution within an actor (or, more generally, a COG) based on its internal state or the availability of the result of an asynchronous call via futures. A statement like \lstinline|await future?| differs from "future.get" 
 %
@@ -94,25 +94,25 @@ This includes a corresponding library of object-oriented design patterns for mod
 
 OO2APL includes a complex middleware for management of the deliberation cycle and the event-based communication between agents. 
 Furthermore, this middleware is tightly coupled with the high-level design patterns for the deliberation cycle and the event-based communication mechanism.
-In contrast, Listing \ref{list:Agent} shows that modeling agents directly by actors allows to abstract in a concise manner from the underlying implementation of the deliberation cycle and the event-based communication mechanism.
+In contrast, Listing \ref{Agent} shows that modeling agents directly by actors allows to abstract in a concise manner from the underlying implementation of the deliberation cycle and the event-based communication mechanism.
 It provides a high-level design pattern in ABS capturing the code structure for modeling agents with a clear separation of message plans and goal rules. 
 The first three lines introduce the generic data types for goals, beliefs and messages.
 In ABS, one can define the goals, beliefs and messages as abstract data types.
-This makes it easy to define the plans for handling incoming messages and the rules for processing the goals by means of pattern matching against these model-specific data types (lines 14 and 21, respectively, of Listing \ref{list:Agent} ).
+This makes it easy to define the plans for handling incoming messages and the rules for processing the goals by means of pattern matching against these model-specific data types (lines 14 and 21).
 The general interface of an agent simply consists of a single method for receiving messages. An implementation of this interface consists of a set of beliefs and a set of goals which are initialized upon creation by means of a statement
 \lstinline|Agent a1= new A1(B,G)|.
 This statement assigns to the variable a1 a dynamically generated identity of the newly created agent and initializes its beliefs and goals (by the actual parameters \lstinline|B| and \lstinline|G|).
-Finally, the \lstinline|run()| method (line 27 of Listing \ref{list:Agent}) ensures proactive processing of the goal rules and allows for
+Finally, the \lstinline|run()| method (line 27) ensures proactive processing of the goal rules and allows for
 interleaved processing of the messages by means of cooperative scheduling as invoked by the \lstinline|suspend| statement (which is an abbreviation of \lstinline|await true|).
 Thanks to the flexibility of ABS, one can easily adopt variations of the above design pattern.
 For example, placing the \lstinline|suspend| statement inside the \lstinline|for| loop will allow interleaving individual goal rules with message plans.
 Furthermore, application-specific scheduling policies \cite{rabs,cog} may be applied if desired, for example, to give some goals or messages higher priorities.
-The actual instances of this general ABS pattern for the description of the auctioning agents (see Appendix 1) additionally use cooperative scheduling for a barrier synchronization between the bidding agents
+The actual instances of this general ABS pattern for the description of the auctioning agents (see Appendix \ref{a1}) additionally use cooperative scheduling for a barrier synchronization between the bidding agents
 and the auctioneer. 
 
 
 
-\begin{lstlisting}[caption= Generic Agent Model, label=list:Agent]
+\begin{lstlisting}[caption= Generic Agent Model, label=Agent]
 data Goal = Goal;
 data Belief = Belief;
 data Message = Message;
@@ -129,15 +129,13 @@ class A1(Set<Belief> init_beliefs, Set<Goal> init_goals)movesimplements Agent {
 		case m { 
 			Message =>moves{ }
 			_ => { }
-		}
-	}
+	}	}
 	
 	Unit goal_rule(Goal g) {
 		case g {
 			Goal => { }
 			_ => { }
-		}
-	}
+	}	}
 	
 	Unit run() {
 		 while(this.goals != EmptySet) {
@@ -145,9 +143,7 @@ class A1(Set<Belief> init_beliefs, Set<Goal> init_goals)movesimplements Agent {
 		        this.goal_rule(g);
 		    }
 		  suspend;
-		}
-	}
-}
+}	}	}
 \end{lstlisting}
 
 %// example of a Main configuration

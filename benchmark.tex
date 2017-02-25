@@ -1,6 +1,6 @@
 \section{Benchmarking the Implementation Schemes}
 \label{bench}
-The main problem that we encountered when implementing cooperative scheduling was saving the context of an execution and resuming from that context. To do this in Java using threads and context switches is simply too expensive and heavily limits the application to the number of native threads that can be created. To measure the improvement provided by Java 8 features, we benchmark a simple example that is illustrated in Listing \ref{absex}. This example creates an Actor of type "A" and sends a large number of messages to it to execute a method \lstinline|recursive_m(5,id)|. This method creates a call chain of size 5 before sending an asynchronous message to itself to execute a basic method \lstinline|compute()| and awaits on its result. Essentially we want to benchmark the pure overhead that arises from having a runtime system with cooperative scheduling support, both in a data-oriented approach and a process-oriented approach.
+The main problem that we encountered when implementing cooperative scheduling was saving the context of an execution and resuming from that context. To do this in Java using threads and context switches heavily limits the application to the number of native threads that can be created. To measure the improvement provided by Java 8 features, we benchmark a simple example that is illustrated in Listing \ref{absex}. This example creates an Actor of type "A" and sends a large number of messages to it to execute a method \lstinline|recursive_m(5,id)|. This method creates a call chain of size 5 before sending an asynchronous message to itself to execute a basic method \lstinline|compute()| and awaits on its result.
 
 %In the
 %example we have one actor containing an which receives a large
@@ -19,7 +19,7 @@ The main problem that we encountered when implementing cooperative scheduling wa
 %\end{figure}
 
 
-\begin{lstlisting}[caption= ABS Example, label=absex]
+\begin{lstlisting}[caption= Benchmark Example, label=absex]
 module Recursive;
 
 interface Ainterface {
@@ -39,10 +39,9 @@ class A() implements Ainterface{
 		return 1;
 	}
 	Int compute( ){
-		result = result + 1;	//no significant computation such that we can measure pure overhead
+		result = result + 1;	//no significant computation
 		return result;
-	}
-}
+}	}
 
 { // Main block:
 	Int i = 0;	
@@ -57,28 +56,23 @@ class A() implements Ainterface{
 		Fut<Int> f1 = head(futures);
 		futures = tail(futures);
 		Int r = f1.get;
-	}
-}
+}	}
 \end{lstlisting}
-
-\par The results are shown in Figure \ref{jj}. The performance figures presented are for one actor that is running 500-2500 method invocations. It is important to observe that each invocation generates 2 messages in the actor's queue, so as the number of calls increases the number of messages doubly increases. The figures show that the trade-off for storing continuations into memory instead of saving them in native threads remove limitations on the application and significantly reduce overhead.
-
-
+ \par Essentially we want to benchmark the pure overhead that arises from having a runtime system with cooperative scheduling support, both in a data-oriented approach and a process-oriented approach. The results are shown in Figure \ref{jj}. The performance figures presented are for one actor that is running 500-2500 method invocations. It is important to observe that each invocation generates 2 messages in the actor's queue, so as the number of calls increases the number of messages doubly increases. The figures show that the trade-off for storing continuations into memory instead of saving them in native threads removes limitations on the application and significantly reduces overhead.
 \begin{figure}
-	\caption{Performance figures of the two Java implementations for Cooperative Scheduling}
 	\centering
-	\includegraphics[scale=0.8]{jaj8.pdf}
+	\includegraphics[scale=.9]{jaj8.pdf}
+	\caption{Performance figures of the two Java implementations for Cooperative Scheduling}
 	\label{jj}
 \end{figure}
 
-\par These results do show the drawback of native Java threads. However, while our solution is catered towards a widely-used language, it doesn't mean that there aren't other languages that are more suited to implement ABS language concepts efficiently using threads and without these limitations. In Section \ref{optimizations} we listed several optimizations that were inferred from out implementation solution. What we want to do is compare this optimized solution to an ABS backend implemented in Erlang that uses the same process-oriented approach but does not suffer from any limitation of native threads. We want to observe if our data-oriented approach can be comparable to Erlang's lightweight threads. The result in Figure \ref{ej} show that our approach fares much better once the number of invocations passes 3000. This result also strengthens ABS purpose to provide a programming language for real applications.
+\par These results do show the drawback of native Java threads. However, while our solution is catered towards a widely-used software development language, it doesn't mean that there aren't other languages that are more suited to implement ABS language concepts efficiently using threads and without these limitations. In Section \ref{optimizations} we listed several optimizations that were inferred from our implementation solution. What we want to do is compare this optimized solution to an ABS backend implemented in Erlang that uses the same process-oriented approach but does not suffer from any limitation of native threads. We want to observe if our data-oriented approach can be comparable to Erlang's lightweight threads. The result in Figure \ref{ej} show that our approach fares better once the number of invocations passes 3000. This result also strengthens ABS purpose to provide a programming language for real applications.
 
 \begin{figure}
-	\caption{Performance figures of the Erlang and Java backends for Cooperative Scheduling}
 	\centering
-	\includegraphics[scale=0.8]{erlj8.pdf}
+	\includegraphics[scale=.9]{erlj8.pdf}
+	\caption{Performance figures of the Erlang and Java backends for Cooperative Scheduling}
 	\label{ej}
-	
 \end{figure}
 
 

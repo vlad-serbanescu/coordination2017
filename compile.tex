@@ -13,10 +13,9 @@ void m1( Int p) {
 	Boolean b;
 	Int i;
 	while (b) {
-		await this.g; // let say this is await number 1, and assume g is a class field
+		await this.g?; // let say this is await number 1, and assume g is a class field
 		i = 0;
-	}
-}
+}	}
 \end{lstlisting}
 
 will translate to:
@@ -25,17 +24,15 @@ void m1(Int p) {
 	Boolean b;
 	Int i;
 	while (b) { 
-			if (!g) {
-					this ! await_1(i, b, p); 
-					return;
-				}
-				i = 0;
-	}
-}
+		if (!g) {
+			this ! await_1(i, b, p); 
+			return;
+		}
+		i = 0;
+}	}
 \end{lstlisting}
 
-Then we have to generate the method "await\_1()" or in fact one of these methods per await statement. Generation can be done using the following rules:
-
+Then we have to generate the inner method "await\_1()" or in fact one of these methods per await statement. Generation can be done using the following rules:
 
 \begin{lstlisting}
 Cont(S1;S2) = Cont(S2) IF await in S2
@@ -58,12 +55,11 @@ void await_1(Int i, Boolean b, Int p) {
 			return;
 		}
 		i = 0 ;
-	}
-}
+}	}
 \end{lstlisting}
 
 \subsection{Scheduling continuations}
-A fully asynchronous environment means to change a synchronous call \lstinline|x = this.m();| into an asynchronous call plus an await like \lstinline|f = this!m(); x = await f?;|. There are two problems here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Both can be implemented by changing the non-deterministic behavior of the Main Task. There are two constrains that we have to impose to preserve the chain of synchronous calls. First, we set a flag "isSyncCall" in the task that is calling "m" and when that flag is true, the Main Task will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. Second, assuming that there is no "message overtaking", the messages that are part of a synchronous call chain arrive in the Actor's queue in a FIFO order. We can label each call chain with a number "syncContext" and all messages part of that call chain will have this number. When the Main Task completes a message labeled with a particular number it will take from the queue the next available message with the same label and execute it. Finally when the last message with that label is complete, the next message will be taken arbitrarily.
+A fully asynchronous environment means to change a synchronous call \\ \lstinline|x = this.m();| into an asynchronous call plus an await like \lstinline|f = this!m();| \\ \lstinline| x = await f?;|. There are two problems here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Both can be implemented by changing the non-deterministic behavior of the Main Task. There are two constrains that we have to impose to preserve the chain of synchronous calls. First, we set a flag "isSyncCall" in the task that is calling "m" and when that flag is true, the Main Task will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. Second, assuming that there is no "message overtaking", the messages that are part of a synchronous call chain arrive in the Actor's queue in a FIFO order. We can label each call chain with a number "syncContext" and all messages part of that call chain will have this number. When the Main Task completes a message labeled with a particular number it will take from the queue the next available message with the same label and execute it. Finally when the last message with that label is complete, then the call chain is complete and the next message will be selected arbitrarily.
 
 %\begin{itemize}
 %	\item we set a flag "isSyncCall" in the task that is calling "m" when that flag is true, it will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. 
